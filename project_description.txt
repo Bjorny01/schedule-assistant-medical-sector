@@ -6,7 +6,7 @@ OVERVIEW
 A medical staff rostering system for scheduling personnel within a single department
 over a rolling or fixed multi-week planning horizon. The system combines a constraint
 solver for reliable, law-compliant schedule generation with an LLM for natural language
-rule interpretation, conflict explanation, and human-readable output.
+rule interpretation, conflict explanation, and human-readable output. 
 
 
 ARCHITECTURE
