@@ -1,0 +1,70 @@
+MEDICAL STAFF ROSTERING SYSTEM — PROJECT DESCRIPTION
+======================================================
+
+OVERVIEW
+--------
+A medical staff rostering system for scheduling personnel within a single department
+over a rolling or fixed multi-week planning horizon. The system combines a constraint
+solver for reliable, law-compliant schedule generation with an LLM for natural language
+rule interpretation, conflict explanation, and human-readable output.
+
+
+ARCHITECTURE
+------------
+1. INPUT LAYER
+   - Per-staff plain-text config files
+   - Department staffing requirements file
+   - Swedish work law rules file
+
+2. LLM (PARSING STAGE)
+   Reads all files, extracts structured constraints and preferences as JSON.
+
+3. CONSTRAINT SOLVER (OR-Tools)
+   - Hard constraints: laws, staffing minimums, mandatory personal needs
+   - Soft constraints: preferences (maximised, not guaranteed)
+   - Outputs a valid schedule or reports infeasibility
+
+4. LLM (REPORTING STAGE)
+   - Explains any broken preferences
+   - Flags near-misses or trade-offs made
+   - Produces human-readable summary
+
+5. OUTPUT LAYER
+   - Per-staff .ics calendar files
+   - Admin overview in Excel/CSV
+
+
+KEY DESIGN DECISIONS
+--------------------
+Planning horizon:
+  Single department, multi-week (e.g. 4-8 week rolling schedule). The solver handles
+  the full horizon at once, allowing it to respect constraints that span weeks
+  (e.g. "not every second Monday").
+
+Config file format:
+  Plain-text, form-like structure readable by non-technical admins and parseable
+  by the LLM without brittle syntax rules.
+
+Rule tiers:
+  Tier 1 — Law          | Source: Swedish work law file          | Hard constraint
+  Tier 2 — Operational  | Source: Department requirements file   | Hard constraint
+  Tier 3 — Personal     | Source: Per-staff config files         | Hard needs + soft preferences
+
+
+SUGGESTED IMPLEMENTATION STEPS
+-------------------------------
+1. Define the config file format
+2. Define the department requirements file
+3. Define the Swedish work law file
+4. Sketch the LLM parsing prompt
+5. Build the OR-Tools solver core
+6. Add LLM reporting layer
+7. Build output exporters (.ics and Excel)
+
+
+TECH STACK
+----------
+- Language:        Python
+- Scheduling:      OR-Tools (constraint solver)
+- AI/LLM:          Claude API (Anthropic)
+- Output formats:  .ics (calendar), .xlsx / .csv (admin overview)
