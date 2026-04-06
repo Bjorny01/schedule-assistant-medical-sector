@@ -1,0 +1,53 @@
+===================================================================
+STAFF CONFIGURATION FILE — Med-3 Rostering System
+===================================================================
+
+PERSONAL INFORMATION
+--------------------
+Name:           Melvin Lindroos
+Role:           Doctor (Läkare) — Junior Attending (ST-läkare)
+Employee ID:    LKR-004
+Contract:       Full-time (100%)
+Max shifts per week: 5
+
+SHIFT AVAILABILITY
+------------------
+Allowed shifts: Day, Evening, Night
+(All shift types allowed — as an ST-läkare, Melvin works all shifts
+as part of his specialist training requirements)
+
+MANDATORY DAYS OFF (hard constraint — must not be scheduled)
+-------------------------------------------------------------
+2026-04-09    Specialist training exam (written) — full day at exam centre
+2026-04-10    Oral examination (continuation of specialist exam — all day)
+2026-05-06    Mandatory ST-läkare training day at hospital education centre
+2026-05-20    Mandatory ST-läkare training day (recurring monthly)
+
+RECURRING UNAVAILABILITY (hard constraint)
+------------------------------------------
+None fixed beyond the monthly training days above.
+
+SHIFT PREFERENCES (soft constraint — schedule will try to honour)
+-----------------------------------------------------------------
+Preferred shifts:          Day, Evening
+Avoid shifts:              None (training requirements include night work)
+Preferred days off:        Sunday
+Max night shifts per week: 2
+Max consecutive working days: 5
+
+ADDITIONAL NOTES
+----------------
+Melvin is a specialist trainee (ST-läkare) in his second year of internal
+medicine training. His training plan requires exposure to all shift types,
+including nights, so he cannot be excluded from nights the way senior doctors
+might be. However, it is good practice to ensure he works no more than 2
+nights per week to maintain learning quality.
+He has mandatory training days on the first Wednesday of each month which
+are protected by his specialist training programme.
+His exam on 2026-04-09 and 2026-04-10 is a significant milestone — he should
+ideally not be scheduled for a night shift on 2026-04-08 (the night before
+his written exam), though this is a soft preference not a hard constraint.
+Melvin is enthusiastic and reliable, and an asset on evening shifts where
+his energy and availability for patient queries is valuable.
+Note: as an ST-läkare, Melvin should ideally work alongside a senior
+physician (Nora, Desdemona, or Karin) during day shifts for supervision.

@@ -1,0 +1,6 @@
+Name: Bob
+Role: nurse
+Contract: 80%
+Max shifts per week: 4
+Mandatory days off: 2024-03-15, 2024-03-22
+Recurring unavailability: Saturday, Sunday

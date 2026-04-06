@@ -1,0 +1,47 @@
+===================================================================
+STAFF CONFIGURATION FILE — Med-3 Rostering System
+===================================================================
+
+PERSONAL INFORMATION
+--------------------
+Name:           Kalle Bergman
+Role:           Nurse (Sjuksköterska)
+Employee ID:    SSK-003
+Contract:       Full-time (100%)
+Max shifts per week: 5
+
+SHIFT AVAILABILITY
+------------------
+Allowed shifts: Day, Evening, Night
+(All shifts allowed)
+
+MANDATORY DAYS OFF (hard constraint — must not be scheduled)
+-------------------------------------------------------------
+2026-04-30    Moving day — new apartment. Fixed appointment with movers.
+2026-05-01    Första maj (Labour Day) — personal conviction, does not work.
+2026-06-01    Last day of 8-week horizon — dentist appointment booked.
+
+RECURRING UNAVAILABILITY (hard constraint)
+------------------------------------------
+Monday evening and night   — Kalle attends a distance-learning nursing
+                             specialisation course every Monday evening
+                             (online, 18:00–21:00). He cannot work evening
+                             or night shifts on Mondays.
+                             Day shifts on Mondays are fine.
+
+SHIFT PREFERENCES (soft constraint — schedule will try to honour)
+-----------------------------------------------------------------
+Preferred shifts:   Day, Evening
+Avoid shifts:       Night (prefers to avoid but accepts up to 2/week)
+Preferred days off: Friday, Saturday (band rehearsal Friday evenings)
+Max night shifts per week:   2
+Max consecutive working days: 5
+
+ADDITIONAL NOTES
+----------------
+Kalle is studying for a specialist nursing qualification part-time.
+He is a flexible and adaptable team member otherwise.
+He plays drums in a local band and has rehearsals most Friday evenings,
+so he strongly prefers not to work evening or night shifts on Fridays,
+though this is a soft preference, not a hard constraint.
+He is happy to do his share of nights but prefers no more than 2 per week.

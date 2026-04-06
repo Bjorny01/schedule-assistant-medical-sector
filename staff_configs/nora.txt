@@ -1,0 +1,56 @@
+===================================================================
+STAFF CONFIGURATION FILE — Med-3 Rostering System
+===================================================================
+
+PERSONAL INFORMATION
+--------------------
+Name:           Nora Verazza
+Role:           Doctor (Läkare) — Clinical Lead
+Employee ID:    LKR-001
+Contract:       Full-time (100%)
+Max shifts per week: 5
+
+SHIFT AVAILABILITY
+------------------
+Allowed shifts: Day only
+As Clinical Lead (verksamhetschef/medicinskt ledningsansvarig), Nora
+is required to be present during core business hours. Evening and night
+shifts are not part of her role at this department level.
+
+MANDATORY DAYS OFF (hard constraint — must not be scheduled)
+-------------------------------------------------------------
+2026-04-16    National clinical leadership conference (Stockholm) — all day
+2026-04-17    Conference day 2 (same conference — pre-approved)
+2026-05-11    Board meeting at hospital management level — all day
+2026-05-12    Follow-up debrief meeting — schedule off to ensure availability.
+
+RECURRING UNAVAILABILITY (hard constraint)
+------------------------------------------
+None fixed. However, Nora typically uses Friday afternoons for
+administrative duties (ward reports, quality metrics). Scheduling her
+on Fridays is acceptable but Friday evenings are never applicable
+(day-shifts-only policy already handles this).
+
+SHIFT PREFERENCES (soft constraint — schedule will try to honour)
+-----------------------------------------------------------------
+Preferred shifts:          Day
+Avoid shifts:              Evening, Night (hard constraint already above)
+Preferred days off:        Friday (for administrative work — soft preference only)
+Max night shifts per week: 0 (not applicable — day shifts only)
+Consecutive days off:      MAXIMISE — Nora strongly prefers that her days off
+                           are grouped together rather than scattered across the
+                           week. When possible, schedule her rest days as
+                           consecutive blocks (e.g. Fri–Sat–Sun rather than
+                           Wed + Sat separately).
+
+ADDITIONAL NOTES
+----------------
+Nora is the clinical lead for Med-3. Her ward presence during day shifts
+is important for team continuity, supervision, and patient rounds.
+She manages the department's quality work and is often in meetings
+on Mondays (team rounds) and Thursdays (department meetings), but these
+occur within her day shift and do not affect scheduling.
+She has expressed a preference for Fridays off to focus on administration,
+but this is a soft preference — she will work Fridays when needed.
+Her strong preference for consecutive days off reflects a desire to
+use rest periods for meaningful recovery and personal activities.

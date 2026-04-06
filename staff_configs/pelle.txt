@@ -1,0 +1,44 @@
+===================================================================
+STAFF CONFIGURATION FILE — Med-3 Rostering System
+===================================================================
+
+PERSONAL INFORMATION
+--------------------
+Name:           Pelle Ström
+Role:           Nurse (Sjuksköterska)
+Employee ID:    SSK-002
+Contract:       80%
+Max shifts per week: 4
+
+SHIFT AVAILABILITY
+------------------
+Allowed shifts: Day, Evening, Night
+(All shifts allowed — see strong preferences below)
+
+MANDATORY DAYS OFF (hard constraint — must not be scheduled)
+-------------------------------------------------------------
+2026-04-10    Family commitment (non-negotiable)
+2026-05-15    Recurrent union meeting (all-day obligation as union rep)
+2026-05-29    Recurrent union meeting (all-day obligation as union rep)
+
+RECURRING UNAVAILABILITY (hard constraint)
+------------------------------------------
+Sunday     — Family day. Pelle cannot be scheduled on Sundays under any
+             circumstances. This is a standing agreement with management.
+
+SHIFT PREFERENCES (soft constraint — schedule will try to honour)
+-----------------------------------------------------------------
+Preferred shifts:   Evening, Night
+Avoid shifts:       Day
+Preferred days off: Monday (prefers a long weekend when possible)
+Max night shifts per week:   3
+Max consecutive working days: 4
+
+ADDITIONAL NOTES
+----------------
+Pelle is an experienced night-shift nurse and actually prefers working evenings
+and nights. He has a young child and finds that working evenings/nights allows
+him to spend daytime hours with the family while the child is at school.
+He is the union representative (facklig representant) for the nurses on Med-3,
+hence the recurring union meeting obligations on specific Fridays.
+At 80%, he expects approximately 4 shifts per week on average.

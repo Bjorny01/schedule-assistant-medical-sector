@@ -1,0 +1,6 @@
+Name: Carol
+Role: doctor
+Contract: 100%
+Max shifts per week: 5
+Allowed shifts: day, evening
+Preferred days off: Saturday, Sunday

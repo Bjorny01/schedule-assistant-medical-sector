@@ -1,0 +1,50 @@
+===================================================================
+STAFF CONFIGURATION FILE — Med-3 Rostering System
+===================================================================
+
+PERSONAL INFORMATION
+--------------------
+Name:           Anna Nilsson
+Role:           Nurse (Sjuksköterska)
+Employee ID:    SSK-007
+Contract:       Full-time (100%)
+Max shifts per week: 5
+
+SHIFT AVAILABILITY
+------------------
+Allowed shifts: Day, Evening, Night
+(All shifts allowed)
+
+MANDATORY DAYS OFF (hard constraint — must not be scheduled)
+-------------------------------------------------------------
+2026-04-24    Wedding anniversary — approved by manager in advance.
+2026-05-02    Daughter's graduation party (evening and night off too,
+              i.e. must not work evening 2026-05-01 → night or
+              day/evening/night on 2026-05-02)
+              CLARIFICATION: No shift on 2026-05-02. No evening/night on
+              2026-05-01 (would end on 2026-05-02).
+
+RECURRING UNAVAILABILITY (hard constraint)
+------------------------------------------
+None.
+
+SHIFT PREFERENCES (soft constraint — schedule will try to honour)
+-----------------------------------------------------------------
+Preferred shifts:   Evening, Day
+Avoid shifts:       Night (dislikes nights but will do them if needed)
+Preferred days off: Thursday, Friday (would like most weekends to start early)
+Max night shifts per week:   1
+Max consecutive working days: 5
+
+ADDITIONAL NOTES
+----------------
+Anna is a full-time nurse with nearly 10 years of experience on Med-3.
+She is a competent all-rounder and a natural mentor to newer staff.
+She prefers evening shifts when not doing days — the pace suits her.
+She strongly dislikes night shifts due to the impact on her young family
+but understands the need for them operationally. She asks to be limited
+to at most 1 night per week where possible.
+Note on 2026-05-01 / 2026-05-02: Anna must not work any shift that causes
+her to be at the hospital on the evening or night of 2026-05-01 (i.e. no
+evening shift starting 15:00 on 2026-05-01, and no night shift starting
+23:00 on 2026-05-01). The whole day of 2026-05-02 is also off.

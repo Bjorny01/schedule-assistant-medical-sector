@@ -1,0 +1,6 @@
+Name: Alice
+Role: nurse
+Contract: 100%
+Max shifts per week: 5
+Preferred shifts: day
+Avoid shifts: night

@@ -1,0 +1,158 @@
+SWEDISH WORK LAW RULES — MEDICAL ROSTERING SYSTEM
+====================================================
+Source: Arbetsmiljöverket (Swedish Work Environment Authority)
+        Arbetstidslagen (1982:673) — Working Hours Act
+        AFS 2005:6 — Provisions on systematic work environment management
+        AFS 1982:17 — Night work in healthcare
+
+NOTE: Healthcare employers are bound by both statutory law and collective
+agreements (kollektivavtal). Where a collective agreement is more restrictive,
+it takes precedence. The rules below reflect statutory minimums.
+
+Reference: https://www.av.se/arbetstid/
+
+
+SECTION 1 — DAILY WORKING HOURS
+---------------------------------
+Rule 1.1 — Standard daily working time:
+  Maximum 8 hours per day for a normal working day.
+  A working day is counted from the start of one shift to the start of the next.
+
+Rule 1.2 — Minimum daily rest (dygnsvila):
+  At least 11 consecutive hours of rest must be provided between the end of
+  one shift and the start of the next shift.
+  Basis: Arbetstidslagen §13 and EU Working Time Directive 2003/88/EC Article 3.
+
+Rule 1.3 — Mandatory break (rast):
+  For any shift exceeding 5 hours, at least 30 minutes of uninterrupted break
+  must be provided. Break is not counted as working time.
+
+Implication for shift scheduling (08:00-shift model):
+  SHIFT TIMES used in this department:
+    Day     (D): 07:00 – 15:00  (8 h)
+    Evening (E): 15:00 – 23:00  (8 h)
+    Night   (N): 23:00 – 07:00  (8 h, ends following calendar day)
+
+  FORBIDDEN CONSECUTIVE SHIFT TRANSITIONS (violate 11 h rest rule):
+    Evening shift → Day shift next day    (gap = 8 h  < 11 h — FORBIDDEN)
+    Night shift   → Day shift next day    (gap = 0 h         — FORBIDDEN)
+    Night shift   → Evening shift next day (gap = 8 h < 11 h — FORBIDDEN)
+
+  PERMITTED CONSECUTIVE TRANSITIONS:
+    Day     → Evening same day             (gap = 0 h — prevented by 1-shift/day rule)
+    Day     → Any shift next day           (gap ≥ 16 h — OK)
+    Evening → Evening or Night next day    (gap ≥ 16 h — OK)
+    Night   → Night next day               (gap = 16 h — OK)
+
+
+SECTION 2 — WEEKLY WORKING HOURS
+----------------------------------
+Rule 2.1 — Maximum weekly working time:
+  Ordinary working time must not exceed 40 hours per week on average.
+  Can be averaged over a reference period of up to 4 weeks.
+  Basis: Arbetstidslagen §10.
+
+Rule 2.2 — Maximum working time over 4-week period:
+  The 4-week rolling average must not exceed 40 hours/week → 160 hours per 4 weeks.
+  In exceptional cases (overtime), up to 48 hours per week may apply temporarily,
+  but the average over the reference period must not exceed 40 h/week.
+
+Rule 2.3 — Weekly rest (veckovila):
+  Every worker is entitled to at least 36 consecutive hours of rest per 7-day period.
+  This rest period should, where possible, include Sunday.
+  Basis: Arbetstidslagen §14.
+
+Implication for scheduling:
+  With 8-hour shifts, max 5 shifts per week (5 × 8 = 40 h).
+  Any 7-day window must contain at least 2 consecutive days off to ensure 36 h rest.
+  Hard rule: no more than 5 working days in any 7-day rolling window.
+  Hard rule: no more than 5 consecutive working days without a day off.
+
+
+SECTION 3 — OVERTIME
+---------------------
+Rule 3.1 — Overtime limits:
+  Maximum overtime per calendar month:  50 hours
+  Maximum overtime per calendar year:   200 hours
+  Overtime must be agreed and documented.
+  Basis: Arbetstidslagen §8.
+
+Rule 3.2 — Overtime compensation:
+  Overtime must be compensated with extra pay or compensatory leave (kompledighet).
+  This system does not schedule overtime unless explicitly allowed.
+
+
+SECTION 4 — NIGHT WORK (NATTARBETE)
+-------------------------------------
+Rule 4.1 — Definition of night time:
+  Night time (nattetid) is defined as the period between 22:00 and 06:00.
+  Basis: Arbetstidslagen §13a.
+
+  In this department: the Night shift (23:00–07:00) falls within night time.
+  The Evening shift (15:00–23:00) overlaps night time by 1 hour.
+
+Rule 4.2 — Night worker classification:
+  A worker is a "night worker" (nattarbetare) if they regularly work at least
+  3 hours of their normal working time during the night period, or if at least
+  one-third of their annual working time falls during night time.
+
+Rule 4.3 — Maximum for night workers:
+  Night workers must not work more than an average of 8 hours per 24-hour period,
+  calculated over a reference period of 4 months.
+  Basis: Arbetstidslagen §13b.
+
+Rule 4.4 — Health assessments for night workers:
+  Night workers are entitled to a health assessment before assignment and
+  periodically thereafter. The employer must offer this assessment.
+
+Implication for scheduling:
+  Night shifts in this system are 8 hours. With max 1 shift per day, the 8 h/24 h
+  limit is automatically satisfied per shift. Monitor total night shift proportion
+  over 4-week blocks to ensure the 1/3 annual threshold is not inadvertently exceeded.
+  Recommended: no more than 8 night shifts per 4-week block per worker.
+
+
+SECTION 5 — HEALTHCARE-SPECIFIC CONSIDERATIONS
+------------------------------------------------
+Rule 5.1 — Continuous operations (kontinuerlig verksamhet):
+  Healthcare facilities classified as continuous operations may deviate from
+  certain weekly rest rules through collective agreements. However, workers
+  must always receive the 11-hour daily rest (Section 1 Rule 1.2).
+
+Rule 5.2 — On-call (beredskap):
+  On-call time where the employee is available but not required to be present
+  is not counted as working time under Arbetstidslagen §6a.
+  Active on-call (standby at the workplace) is counted as working time.
+
+Rule 5.3 — Psychosocial work environment:
+  AFS 2015:4 (Organisational and Social Work Environment) requires that
+  work schedules do not create unhealthy stress or social isolation.
+  Rostering should avoid excessive consecutive night shifts and provide
+  predictable schedules with reasonable notice (minimum 2 weeks).
+
+Rule 5.4 — Individual consideration:
+  Employees with documented medical conditions, pregnancy, or caregiving
+  obligations may have additional rights to adjusted scheduling.
+  These must be handled as mandatory (hard) constraints.
+
+
+SECTION 6 — SYSTEM CONSTRAINT SUMMARY (for solver configuration)
+-----------------------------------------------------------------
+The following hard constraints are derived from the above rules:
+
+HC-01  At most 1 shift per employee per calendar day.
+HC-02  Forbidden transition: Evening(d) → Day(d+1)   [11 h rest]
+HC-03  Forbidden transition: Night(d) → Day(d+1)     [11 h rest]
+HC-04  Forbidden transition: Night(d) → Evening(d+1) [11 h rest]
+HC-05  At most 5 shifts per employee per 7-day week.
+HC-06  At most 5 working days in any rolling 6-day window (no 6 consecutive days).
+HC-07  Maximum 8 night shifts per employee per 4-week block.
+HC-08  Contract hours: weekly shifts capped at ceiling(contract_pct × 5).
+
+Soft constraints (solver will maximize compliance, not guarantee):
+
+SC-01  Preferred shift types per employee.
+SC-02  Preferred days off per employee.
+SC-03  Avoid specified shift types per employee.
+SC-04  Maximum night shifts per week per employee.
+SC-05  Minimize consecutive shifts of the same unfavored type.

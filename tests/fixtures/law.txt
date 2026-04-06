@@ -1,0 +1,2 @@
+Max shifts per week: 5
+Min rest hours: 11

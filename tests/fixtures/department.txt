@@ -1,0 +1,13 @@
+Department: Test Ward
+Min nurses day: 1
+Min nurses evening: 0
+Min nurses night: 0
+Min doctors day: 1
+Min doctors evening: 0
+Min doctors night: 0
+Min nurses weekend day: 1
+Min nurses weekend evening: 0
+Min nurses weekend night: 0
+Min doctors weekend day: 0
+Min doctors weekend evening: 0
+Min doctors weekend night: 0
