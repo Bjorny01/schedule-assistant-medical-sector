@@ -38,15 +38,15 @@ these as non-negotiable hard constraints (Tier 2).
 WEEKDAYS (Monday–Friday):
   Shift       Nurses (min)   Doctors (min)   Notes
   ---------   ------------   -------------   -----
-  Day         3              1               Patient-to-nurse ratio on 16-bed ward
-  Evening     2              0               On-call doctor covers (see below)
-  Night       2              0               On-call covers; nursing pool available
+  Day         2              1               Patient-to-nurse ratio on 16-bed ward
+  Evening     1              0               On-call doctor covers (see below)
+  Night       1              0               On-call covers; nursing pool available
 
 WEEKENDS (Saturday–Sunday):
   Shift       Nurses (min)   Doctors (min)   Notes
   ---------   ------------   -------------   -----
   Day         2              1               Reduced but must maintain medical supervision
-  Evening     2              0               On-call doctor covers
+  Evening     1              0               On-call doctor covers
   Night       1              0               Nursing pool supplement available
 
 PREFERRED STAFFING (Soft Constraints — scheduler should aim for but cannot guarantee):

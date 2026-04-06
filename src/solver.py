@@ -263,7 +263,7 @@ def build_schedule(
 
     solver = cp_model.CpSolver()
     solver.parameters.max_time_in_seconds = solver_time_limit_s
-    solver.parameters.log_search_progress = False
+    solver.parameters.log_search_progress = True
     solver.parameters.num_search_workers = 4
 
     status = solver.Solve(model)

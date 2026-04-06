@@ -43,7 +43,7 @@ class StaffPreferences:
     preferred_days_off: list[int] = field(default_factory=list)  # 0=Monday … 6=Sunday
     max_night_shifts_per_week: int = 3
     max_consecutive_working_days: int = 5
-    prefer_consecutive_days_off: bool = False  # cluster rest days together
+    prefer_consecutive_days_off: bool = True  # cluster rest days together
 
 
 @dataclass
@@ -117,16 +117,16 @@ class DepartmentRequirements:
     department_name: str = "Medical Department"
 
     # Weekday minimums (hard)
-    min_nurses_day: int = 3
-    min_nurses_evening: int = 2
-    min_nurses_night: int = 2
+    min_nurses_day: int = 2
+    min_nurses_evening: int = 1
+    min_nurses_night: int = 1
     min_doctors_day: int = 1
     min_doctors_evening: int = 0
     min_doctors_night: int = 0
 
     # Weekend minimums (hard)
     min_nurses_weekend_day: int = 2
-    min_nurses_weekend_evening: int = 2
+    min_nurses_weekend_evening: int = 1
     min_nurses_weekend_night: int = 1
     min_doctors_weekend_day: int = 1
     min_doctors_weekend_evening: int = 0

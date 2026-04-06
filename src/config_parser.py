@@ -207,6 +207,7 @@ def _parse_staff_file(text: str, start_date: date) -> Staff | None:
     max_nights = _parse_int(kv.get("max night shifts per week", ""), default=3)
     max_consec = _parse_int(kv.get("max consecutive working days", ""), default=5)
     consec_off = "consecutive" in kv.get("consecutive days off", "").lower()
+    #consec_off = True      # If always true consecutive days off are desired
 
     preferences = StaffPreferences(
         preferred_shifts=_parse_shift_list(pref_raw),
@@ -238,14 +239,14 @@ def _parse_department_file(text: str) -> DepartmentRequirements:
 
     return DepartmentRequirements(
         department_name=kv.get("department", "Medical Department"),
-        min_nurses_day=gi("min nurses day", 3),
-        min_nurses_evening=gi("min nurses evening", 2),
-        min_nurses_night=gi("min nurses night", 2),
+        min_nurses_day=gi("min nurses day", 2),
+        min_nurses_evening=gi("min nurses evening", 1),
+        min_nurses_night=gi("min nurses night", 1),
         min_doctors_day=gi("min doctors day", 1),
         min_doctors_evening=gi("min doctors evening", 0),
         min_doctors_night=gi("min doctors night", 0),
         min_nurses_weekend_day=gi("min nurses weekend day", 2),
-        min_nurses_weekend_evening=gi("min nurses weekend evening", 2),
+        min_nurses_weekend_evening=gi("min nurses weekend evening", 1),
         min_nurses_weekend_night=gi("min nurses weekend night", 1),
         min_doctors_weekend_day=gi("min doctors weekend day", 1),
         min_doctors_weekend_evening=gi("min doctors weekend evening", 0),
