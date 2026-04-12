@@ -136,7 +136,7 @@ def export_excel(schedule: Schedule, inputs: ParsedInputs, output_dir: Path) -> 
     ws.cell(row=1, column=1).fill = header_fill
     ws.cell(row=1, column=1).font = header_font
     ws.cell(row=1, column=1).border = border
-    ws.column_dimensions["A"].width = 20
+    ws.column_dimensions["A"].width = 22
 
     for d, day in enumerate(dates):
         col = d + 2
@@ -181,12 +181,12 @@ def export_excel(schedule: Schedule, inputs: ParsedInputs, output_dir: Path) -> 
         name_cell = ws.cell(
             row=row,
             column=1,
-            value=f"{staff.name} ({int(staff.contract_pct*100)}%)",
+            value=f"{staff.name}\n{staff.role.value.capitalize()} · {int(staff.contract_pct*100)}%",
         )
         name_cell.font = Font(bold=True, size=9)
         name_cell.fill = PatternFill(fill_type="solid", fgColor="DEEAF1")
         name_cell.border = border
-        name_cell.alignment = Alignment(vertical="center")
+        name_cell.alignment = Alignment(vertical="center", wrap_text=True)
 
         for d, day in enumerate(dates):
             col = d + 2
@@ -205,7 +205,7 @@ def export_excel(schedule: Schedule, inputs: ParsedInputs, output_dir: Path) -> 
                 cell.value = ""
                 cell.fill = off_fill
 
-        ws.row_dimensions[row].height = 18
+        ws.row_dimensions[row].height = 28
 
     # ------------------------------------------------------------------
     # Summary row — totals per staff vs contract

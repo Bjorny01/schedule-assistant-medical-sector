@@ -2,3 +2,18 @@
 __pycache__/
 .venv/
 venv/
+
+# VS code
+.vscode/
+
+# Claude
+.claude/
+
+# Ginore all .xlsx files
+*.xlsx
+
+# Output folders from manually generated LLM parser files
+output/
+.output/
+
+
