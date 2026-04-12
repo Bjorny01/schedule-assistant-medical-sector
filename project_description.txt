@@ -18,6 +18,8 @@ ARCHITECTURE
 
 2. LLM (PARSING STAGE)
    Reads all files, extracts structured constraints and preferences as JSON.
+   Three modes: API call (--default), manual copy-paste (--manual-llm),
+   or built-in text parser (--no-llm).
 
 3. CONSTRAINT SOLVER (OR-Tools)
    - Hard constraints: laws, staffing minimums, mandatory personal needs
@@ -28,6 +30,7 @@ ARCHITECTURE
    - Explains any broken preferences
    - Flags near-misses or trade-offs made
    - Produces human-readable summary
+   Same three modes as the parsing stage.
 
 5. OUTPUT LAYER
    - Per-staff .ics calendar files
@@ -62,9 +65,21 @@ SUGGESTED IMPLEMENTATION STEPS
 7. Build output exporters (.ics and Excel)
 
 
+LLM MODES
+---------
+The system supports three LLM modes, controlled via command-line flags:
+
+  (default)      API mode — calls Claude via the Anthropic SDK.
+  --manual-llm   Manual mode — writes prompts to files, waits for the user to
+                 paste the response from any LLM, then continues the pipeline.
+  --no-llm       Off — uses the built-in text parser and skips the narrative report.
+
+Manual mode enables experimentation with different LLMs without changing code.
+
+
 TECH STACK
 ----------
 - Language:        Python
 - Scheduling:      OR-Tools (constraint solver)
-- AI/LLM:          Claude API (Anthropic)
+- AI/LLM:          Claude API (Anthropic), or any LLM via manual mode
 - Output formats:  .ics (calendar), .xlsx / .csv (admin overview)

@@ -112,6 +112,26 @@ Uses the built-in key-value parser and skips the Claude narrative report.
 .venv/bin/python main.py --no-llm
 ```
 
+### Manual LLM mode (use any LLM, no API key needed)
+
+Writes prompts to files so you can paste them into any LLM (ChatGPT, Gemini,
+local models, etc.) and save the response back.
+
+```bash
+.venv/bin/python main.py --manual-llm
+```
+
+The program will pause twice — once for parsing, once for reporting:
+
+1. **Stage 1 (parsing)** — open `output/parser_prompt.txt`, copy the system prompt
+   and user message into your LLM, save the JSON response to `output/parser_response.txt`,
+   then press Enter.
+2. **Stage 3 (reporting)** — open `output/reporter_prompt.txt`, copy the prompt into
+   your LLM, save the narrative response to `output/reporter_response.txt`, then press Enter.
+
+The prompt files use `=== SYSTEM PROMPT ===` and `=== USER MESSAGE ===` headers so
+you can identify which part goes where in your LLM's interface.
+
 ### Increase the solver time limit
 
 Default is 120 seconds. Raise it for larger or tightly-constrained problems.
@@ -128,6 +148,12 @@ Default is 120 seconds. Raise it for larger or tightly-constrained problems.
   --output-dir output \
   --no-llm \
   --time-limit 180
+
+# Or with manual LLM mode
+.venv/bin/python main.py \
+  --start-date 2026-04-06 \
+  --output-dir output \
+  --manual-llm
 ```
 
 ### What the program outputs
@@ -219,6 +245,15 @@ This lets you run or debug any configuration from the Run and Debug panel
       "request": "launch",
       "program": "${workspaceFolder}/main.py",
       "args": ["--start-date", "2026-04-06", "--no-llm"],
+      "python": "${workspaceFolder}/.venv/bin/python",
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Run: main.py (manual LLM)",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/main.py",
+      "args": ["--manual-llm"],
       "python": "${workspaceFolder}/.venv/bin/python",
       "console": "integratedTerminal"
     },
@@ -336,12 +371,15 @@ Pure data classes — no I/O, no external dependencies.
 Reads `.txt` config files and returns a `ParsedInputs` object.
 
 ```
-parse_all_inputs(staff_config_dir, dept_req_file, law_file, start_date, use_llm=True)
+parse_all_inputs(staff_config_dir, dept_req_file, law_file, start_date,
+                 use_llm=True, manual_llm=False, output_dir=None)
     → ParsedInputs
 ```
 
 Set `use_llm=False` to skip the Claude API call and use the built-in
 key-value parser. This is the mode used by the test suite.
+Set `manual_llm=True` to use the file-based prompt workflow instead of
+calling the API.
 
 ### `src/solver.py`
 
@@ -363,11 +401,12 @@ Constraint tiers enforced:
 Generates a human-readable report from a completed schedule.
 
 ```
-generate_report(schedule, inputs) → str
+generate_report(schedule, inputs, manual_llm=False, output_dir=None) → str
 ```
 
 Calls Claude if `ANTHROPIC_API_KEY` is set; otherwise returns the plain-text
-summary produced by `_build_schedule_summary`.
+summary produced by `_build_schedule_summary`. Set `manual_llm=True` to use the
+file-based prompt workflow.
 
 ### `src/exporters.py`
 

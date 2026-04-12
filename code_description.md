@@ -80,14 +80,25 @@ A bundle of the three things produced by `config_parser.py` and consumed by `sol
 ### Entry point
 
 ```python
-parse_all_inputs(staff_config_dir, dept_req_file, law_file, start_date, use_llm)
+parse_all_inputs(staff_config_dir, dept_req_file, law_file, start_date,
+                 use_llm=True, manual_llm=False, output_dir=None)
 ```
 
-Reads every `.txt` file in `staff_configs/`, plus the two department/law files. If `use_llm=True` and an API key is set, it calls Claude. Otherwise it falls back to the built-in text parser.
+Reads every `.txt` file in `staff_configs/`, plus the two department/law files. Three modes:
+
+| Flag combination | Behaviour |
+|------------------|-----------|
+| `use_llm=True` (default) | Calls the Claude API. Falls back to the text parser on failure. |
+| `manual_llm=True` | Writes the prompt to `output/parser_prompt.txt` and waits for the user to save the LLM response to `output/parser_response.txt`. |
+| `use_llm=False` | Uses the built-in key-value text parser (no LLM involved). |
 
 ### LLM path (`_parse_with_llm`)
 
-All file contents are concatenated into a single message and sent to `claude-sonnet-4-6` with a carefully structured system prompt. The system prompt defines an exact JSON schema and instructs the model to convert natural-language date references ("every Friday", "weeks 3-4") into ISO-format dates relative to the provided schedule start date. The returned JSON is then passed to `_build_parsed_inputs` which converts it into Python model objects.
+All file contents are concatenated into a single message (by the shared helper `_build_user_message`) and sent to `claude-sonnet-4-6` with a carefully structured system prompt. The system prompt defines an exact JSON schema and instructs the model to convert natural-language date references ("every Friday", "weeks 3-4") into ISO-format dates relative to the provided schedule start date. The returned JSON is then passed to `_build_parsed_inputs` which converts it into Python model objects.
+
+### Manual LLM path (`_parse_with_manual_llm`)
+
+Uses the same system prompt and user message as the API path. Instead of calling the API, it writes both to `output/parser_prompt.txt` (with `=== SYSTEM PROMPT ===` and `=== USER MESSAGE ===` headers), then pauses with `input()` until the user saves the LLM's JSON response to `output/parser_response.txt`. The response is parsed identically to the API path (markdown fences are stripped, JSON is decoded, `_build_parsed_inputs` builds the model objects).
 
 ### Fallback text parser (`_parse_with_fallback`)
 
@@ -174,11 +185,15 @@ Always runs (no API required). Formats the schedule into structured plain text:
 - Daily staffing table: how many nurses and doctors are on each shift each day, with a `⚠ BELOW MIN` flag if minimums are not met
 - List of all broken soft preferences
 
-### `_call_llm` (LLM path)
+### `_call_llm` (API path)
 
 Sends the plain-text summary to `claude-sonnet-4-6` with a system prompt that instructs the model to produce a structured narrative report with five sections: executive summary, compliance confirmation, coverage analysis, preference trade-offs, and recommendations. The LLM output is returned with the raw summary appended as an appendix.
 
 If the API call fails, `generate_report` catches the exception and returns the plain-text summary directly.
+
+### `_manual_llm_report` (manual path)
+
+Uses the same system prompt and user message as the API path. Writes both to `output/reporter_prompt.txt` (with `=== SYSTEM PROMPT ===` and `=== USER MESSAGE ===` headers), then pauses until the user saves the LLM's narrative response to `output/reporter_response.txt`. The response is appended with the raw summary as an appendix, identical to the API path.
 
 ---
 
@@ -214,13 +229,15 @@ Uses `openpyxl`. Builds a grid workbook:
 ## `main.py` — entry point and orchestration
 
 Ties the four stages together. Responsibilities:
-1. Parses command-line arguments (`--start-date`, `--output-dir`, `--no-llm`, `--time-limit`)
+1. Parses command-line arguments (`--start-date`, `--output-dir`, `--no-llm`, `--manual-llm`, `--time-limit`)
 2. Calculates the schedule start date (defaults to the next Monday)
 3. Calls each stage in sequence, printing progress messages
 4. Handles the failure case (infeasible solver) with a clear diagnostic message
 5. Exits with code `0` on success, `1` on error
 
 The `--no-llm` flag runs the complete pipeline without any API calls: the fallback text parser handles Stage 1, the solver runs unchanged in Stage 2, and Stage 3 returns the plain-text summary only.
+
+The `--manual-llm` flag replaces API calls with a file-based workflow: at each LLM stage the program writes a prompt file, waits for the user to paste the LLM response into a response file, and continues. This allows using any LLM without changing code.
 
 ---
 

@@ -39,6 +39,8 @@ def parse_all_inputs(
     law_file: Path,
     start_date: date,
     use_llm: bool = True,
+    manual_llm: bool = False,
+    output_dir: Path | None = None,
 ) -> ParsedInputs:
     """
     Read all input files and return a ParsedInputs object.
@@ -47,6 +49,9 @@ def parse_all_inputs(
     use_llm is False.
     """
     raw_texts = _read_all_files(staff_config_dir, dept_req_file, law_file)
+
+    if manual_llm:
+        return _parse_with_manual_llm(raw_texts, start_date, output_dir or Path("output"))
 
     if use_llm:
         try:
@@ -136,16 +141,47 @@ Rules:
 """
 
 
+def _build_user_message(raw_texts: dict[str, str], start_date: date) -> str:
+    sections = [f"Schedule start date: {start_date.isoformat()}\n"]
+    for key, text in raw_texts.items():
+        sections.append(f"=== FILE: {key} ===\n{text}\n")
+    return "\n".join(sections)
+
+
+def _parse_with_manual_llm(
+    raw_texts: dict[str, str], start_date: date, output_dir: Path
+) -> ParsedInputs:
+    output_dir.mkdir(parents=True, exist_ok=True)
+    prompt_file = output_dir / "parser_prompt.txt"
+    response_file = output_dir / "parser_response.txt"
+
+    user_message = _build_user_message(raw_texts, start_date)
+
+    prompt_file.write_text(
+        "=== SYSTEM PROMPT ===\n\n"
+        + _SYSTEM_PROMPT
+        + "\n\n=== USER MESSAGE ===\n\n"
+        + user_message,
+        encoding="utf-8",
+    )
+    print(f"      Prompt written to: {prompt_file.resolve()}")
+    print(f"      Paste the LLM response into: {response_file.resolve()}")
+    input("      Press Enter when the response file is ready...")
+
+    raw_json = response_file.read_text(encoding="utf-8").strip()
+    raw_json = re.sub(r"^```json\s*", "", raw_json)
+    raw_json = re.sub(r"```\s*$", "", raw_json)
+
+    data = json.loads(raw_json)
+    return _build_parsed_inputs(data, start_date)
+
+
 def _parse_with_llm(raw_texts: dict[str, str], start_date: date) -> ParsedInputs:
     import anthropic
 
     client = anthropic.Anthropic(api_key=os.environ.get("ANTHROPIC_API_KEY"))
 
-    # Build user message
-    sections = [f"Schedule start date: {start_date.isoformat()}\n"]
-    for key, text in raw_texts.items():
-        sections.append(f"=== FILE: {key} ===\n{text}\n")
-    user_message = "\n".join(sections)
+    user_message = _build_user_message(raw_texts, start_date)
 
     response = client.messages.create(
         model="claude-sonnet-4-6",

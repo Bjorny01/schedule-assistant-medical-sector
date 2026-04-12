@@ -57,6 +57,12 @@ def main() -> int:
         help="Disable Claude API calls. Uses built-in text parser and skips the narrative report.",
     )
     parser.add_argument(
+        "--manual-llm",
+        action="store_true",
+        help="Write LLM prompts to files for copy-pasting into any LLM. "
+             "Waits for you to save the response before continuing.",
+    )
+    parser.add_argument(
         "--time-limit",
         type=int,
         default=120,
@@ -93,10 +99,13 @@ def main() -> int:
     from src.config_parser import parse_all_inputs
 
     print("[1/4] Parsing configuration files...")
-    use_llm = not args.no_llm
+    manual_llm = args.manual_llm
+    use_llm = not args.no_llm and not manual_llm
     if use_llm and not __import__("os").environ.get("ANTHROPIC_API_KEY"):
         print("      WARNING: ANTHROPIC_API_KEY not set — falling back to text parser.")
         use_llm = False
+
+    output_dir = Path(args.output_dir)
 
     inputs = parse_all_inputs(
         staff_config_dir=STAFF_DIR,
@@ -104,6 +113,8 @@ def main() -> int:
         law_file=LAW_FILE,
         start_date=start_date,
         use_llm=use_llm,
+        manual_llm=manual_llm,
+        output_dir=output_dir,
     )
 
     print(f"      Loaded {len(inputs.staff)} staff members:")
@@ -145,7 +156,7 @@ def main() -> int:
     from src.reporter import generate_report
 
     print("\n[3/4] Generating schedule report...")
-    report = generate_report(schedule, inputs)
+    report = generate_report(schedule, inputs, manual_llm=manual_llm, output_dir=output_dir)
 
     print("\n" + "=" * 60)
     print(report)
@@ -156,7 +167,6 @@ def main() -> int:
     # ------------------------------------------------------------------
     from src.exporters import export_excel, export_ics_files
 
-    output_dir = Path(args.output_dir)
     print(f"\n[4/4] Exporting files to {output_dir}/...")
 
     export_ics_files(schedule, inputs, output_dir)

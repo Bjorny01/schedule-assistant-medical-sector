@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import os
 from datetime import date, timedelta
+from pathlib import Path
 
 from .models import ParsedInputs, Role, Schedule, ShiftType, Staff
 
@@ -18,13 +19,21 @@ SHIFT_SYMBOLS = {
 }
 
 
-def generate_report(schedule: Schedule, inputs: ParsedInputs) -> str:
+def generate_report(
+    schedule: Schedule,
+    inputs: ParsedInputs,
+    manual_llm: bool = False,
+    output_dir: Path | None = None,
+) -> str:
     """
     Call Claude to produce a narrative schedule report.
 
     Falls back to a plain-text summary if the API call fails.
     """
     summary_text = _build_schedule_summary(schedule, inputs)
+
+    if manual_llm:
+        return _manual_llm_report(summary_text, output_dir or Path("output"))
 
     try:
         return _call_llm(summary_text, schedule, inputs)
@@ -162,6 +171,40 @@ Structure your report as follows:
 
 Tone: professional, clear, compassionate. Avoid jargon. Keep it under 600 words.
 """
+
+
+def _manual_llm_report(summary_text: str, output_dir: Path) -> str:
+    output_dir.mkdir(parents=True, exist_ok=True)
+    prompt_file = output_dir / "reporter_prompt.txt"
+    response_file = output_dir / "reporter_response.txt"
+
+    user_message = (
+        f"Please produce the schedule report for the following schedule summary.\n\n"
+        f"{summary_text}"
+    )
+
+    prompt_file.write_text(
+        "=== SYSTEM PROMPT ===\n\n"
+        + _REPORT_SYSTEM
+        + "\n\n=== USER MESSAGE ===\n\n"
+        + user_message,
+        encoding="utf-8",
+    )
+    print(f"      Prompt written to: {prompt_file.resolve()}")
+    print(f"      Paste the LLM response into: {response_file.resolve()}")
+    input("      Press Enter when the response file is ready...")
+
+    llm_report = response_file.read_text(encoding="utf-8").strip()
+
+    return (
+        llm_report
+        + "\n\n"
+        + "=" * 70
+        + "\nAPPENDIX — RAW SCHEDULE DATA\n"
+        + "=" * 70
+        + "\n"
+        + summary_text
+    )
 
 
 def _call_llm(summary_text: str, schedule: Schedule, inputs: ParsedInputs) -> str:
