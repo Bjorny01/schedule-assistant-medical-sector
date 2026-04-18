@@ -7,7 +7,7 @@ Testing:
 - Test fall-back breaking, e.g. too many mandatory days off some day
 
 Optimization:
-- The solver is very fast for 2 weeks (45 s) but slow for 4 weeks (5 min), optimization problem scales non-linearly --> Make it able to solve two weeks, then consider last two weeks and optimize another 2 weeks.
+- The solver is very fast for 3 weeks (45 s) but slow for 4 weeks (5 min), optimization problem scales non-linearly --> Make it able to solve two weeks, then consider last two weeks and optimize another 2 weeks.
 
 Own learning:
 - Repeat optimizer mathematical model and priorities
