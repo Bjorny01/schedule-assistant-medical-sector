@@ -1,6 +1,7 @@
 Future feature ideas:
 - Make it able (but not required) to import an old schedule to keep schedules fair e.g. someone doesn't get deprioritized two schedules in a row
 - Make it able to take instructions on small edits, e.g. change nurse X to nurse Y on YYYY-MM-DD day shift
+- Build dict or similar to map names to annonymous titles e.g. Anna: Nurse-1, so that no GDPR data has to be sent in the LLM promopt
 
 Testing:
 - Push time horizon 4, 6, 8 weeks
@@ -11,4 +12,7 @@ Optimization:
 
 Own learning:
 - Repeat optimizer mathematical model and priorities
+
+Long term improvments:
+- Make more user friendly
 
