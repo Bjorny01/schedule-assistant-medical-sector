@@ -1,0 +1,45 @@
+===================================================================
+STAFF CONFIGURATION FILE — Med-3 Rostering System
+===================================================================
+
+PERSONAL INFORMATION
+--------------------
+Name:           Clas Johansson
+Role:           Nurse (Sjuksköterska)
+Employee ID:    SSK-005
+Contract:       Full-time (100%)
+Max shifts per week: 5
+
+SHIFT AVAILABILITY
+------------------
+Allowed shifts: Day, Evening, Night
+(All shifts allowed)
+
+MANDATORY DAYS OFF (hard constraint — must not be scheduled)
+-------------------------------------------------------------
+2026-04-17    Birthday celebration — pre-booked travel (day off requested
+              and approved in advance by ward manager).
+2026-05-22    Conference: Riksstämman för sjuksköterskor — attending
+              professional nursing conference, all-day.
+2026-05-23    Conference day 2 (same conference).
+
+RECURRING UNAVAILABILITY (hard constraint)
+------------------------------------------
+None.
+
+SHIFT PREFERENCES (soft constraint — schedule will try to honour)
+-----------------------------------------------------------------
+Preferred shifts:   Day, Evening
+Avoid shifts:       None (comfortable with all shift types)
+Preferred days off: Sunday
+Max night shifts per week:   2
+Max consecutive working days: 5
+
+ADDITIONAL NOTES
+----------------
+Clas is a flexible full-time nurse who is comfortable working all three shift
+types. He particularly enjoys the team dynamics on day and evening shifts.
+He is willing to cover nights when needed but prefers them not to dominate
+his schedule. He appreciates Sundays off when possible to attend church.
+Clas is also trained as a medication nurse (läkemedelsansvarig) and should
+be prioritised for day shifts when special medication management is required.

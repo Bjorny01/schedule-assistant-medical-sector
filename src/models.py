@@ -41,6 +41,8 @@ class StaffPreferences:
     preferred_shifts: list[ShiftType] = field(default_factory=list)
     avoid_shifts: list[ShiftType] = field(default_factory=list)
     preferred_days_off: list[int] = field(default_factory=list)  # 0=Monday … 6=Sunday
+    # Soft preference to have a specific shift off on a recurring weekday
+    preferred_shifts_off: list[tuple[int, ShiftType]] = field(default_factory=list)
     max_night_shifts_per_week: int = 3
     max_consecutive_working_days: int = 5
     prefer_consecutive_days_off: bool = True  # cluster rest days together
@@ -57,6 +59,9 @@ class StaffConstraints:
     # Hard personal needs
     mandatory_days_off: list[date] = field(default_factory=list)
     recurring_days_off: list[int] = field(default_factory=list)   # 0=Mon … 6=Sun
+    # Hard shift-level off requests (narrower than a whole day off)
+    mandatory_shifts_off: list[tuple[date, ShiftType]] = field(default_factory=list)
+    recurring_shifts_off: list[tuple[int, ShiftType]] = field(default_factory=list)
     allowed_shifts: Optional[list[ShiftType]] = None               # None = all allowed
     max_weekly_shifts: int = 5                                     # from contract
 

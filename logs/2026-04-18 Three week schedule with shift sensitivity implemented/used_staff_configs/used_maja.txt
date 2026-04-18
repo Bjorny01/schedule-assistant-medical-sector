@@ -1,0 +1,42 @@
+===================================================================
+STAFF CONFIGURATION FILE — Med-3 Rostering System
+===================================================================
+
+PERSONAL INFORMATION
+--------------------
+Name:           Maja Lindqvist
+Role:           Nurse (Sjuksköterska)
+Employee ID:    SSK-001
+Contract:       Full-time (100%)
+Max shifts per week: 5
+
+SHIFT AVAILABILITY
+------------------
+Allowed shifts: Day, Evening, Night
+(No shift type is completely excluded — see preferences below)
+
+MANDATORY DAYS OFF (hard constraint — must not be scheduled)
+-------------------------------------------------------------
+2026-04-22    Daughter's school graduation ceremony (all-day)
+2026-05-08    Medical appointment (pre-booked, cannot be moved)
+
+RECURRING UNAVAILABILITY (hard constraint)
+------------------------------------------
+None. Maja has no fixed recurring unavailability.
+
+SHIFT PREFERENCES (soft constraint — schedule will try to honour)
+-----------------------------------------------------------------
+Preferred shifts:   Day
+Avoid shifts:       Night
+Preferred days off: Saturday, Sunday (would like at least one free weekend
+                    per 4-week block, but understands operational demands)
+Max night shifts per week:   1
+Max consecutive working days: 5
+
+ADDITIONAL NOTES
+----------------
+Maja is the most senior nurse on the ward and often acts as shift lead
+on day shifts. She is reliable and flexible within the constraints above.
+She has expressed that working too many consecutive nights affects her
+sleep quality significantly, hence the strong preference to avoid nights.
+She is happy to do occasional nights when operationally necessary.

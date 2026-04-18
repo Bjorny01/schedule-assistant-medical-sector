@@ -1,0 +1,132 @@
+DEPARTMENT STAFFING REQUIREMENTS
+=================================
+Department:     Medicin Avdelning 3 (Med-3)
+Hospital:       Länssjukhuset Exempel
+Planning unit:  Shift scheduling — rolling 8-week horizon
+Last updated:   2026-03-31
+
+OVERVIEW
+--------
+Med-3 is a 16-bed general internal medicine ward operating 24 hours a day,
+7 days a week. The ward employs registered nurses (sjuksköterskor) and
+specialist physicians (läkare). Night nursing coverage is supplemented by
+a hospital-wide nursing pool for overflow situations.
+
+Roles in scope for this scheduling system:
+  - Registered Nurses (Sjuksköterska / SSK): Maja, Pelle, Kalle, Gudrun,
+                                              Clas, Sofia, Anna, Klara
+  - Physicians / Doctors (Läkare):           Nora, Desdemona, Karin, Melvin
+
+
+SHIFT DEFINITIONS
+-----------------
+Shift   Code   Start   End    Duration   Description
+-----   ----   -----   ---    --------   -----------
+Day     D      07:00   15:00   8 h       Main ward shift. Full clinical activity.
+Evening E      15:00   23:00   8 h       Reduced staffing. Admission and evening rounds.
+Night   N      23:00   07:00   8 h       Minimal staffing. Monitoring + acute care only.
+
+All shifts include a 30-minute unpaid break (per Arbetstidslagen §15).
+Effective clinical hours per shift: 7.5 hours.
+
+
+MINIMUM STAFFING REQUIREMENTS (Hard Operational Constraints)
+-------------------------------------------------------------
+These are the minimum headcounts that MUST be met. The scheduler treats
+these as non-negotiable hard constraints (Tier 2).
+
+WEEKDAYS (Monday–Friday):
+  Shift       Nurses (min)   Doctors (min)   Notes
+  ---------   ------------   -------------   -----
+  Day         2              1               Patient-to-nurse ratio on 16-bed ward
+  Evening     1              0               On-call doctor covers (see below)
+  Night       1              0               On-call covers; nursing pool available
+
+WEEKENDS (Saturday–Sunday):
+  Shift       Nurses (min)   Doctors (min)   Notes
+  ---------   ------------   -------------   -----
+  Day         2              1               Reduced but must maintain medical supervision
+  Evening     1              0               On-call doctor covers
+  Night       1              0               Nursing pool supplement available
+
+PREFERRED STAFFING (Soft Constraints — scheduler should aim for but cannot guarantee):
+  Weekday Day:       4 nurses,  1 doctor  (ideal for patient load)
+  Weekday Evening:   3 nurses,  0 doctors
+  Night (all days):  2 nurses,  0 doctors
+  Weekend Day:       3 nurses,  1 doctor
+
+NOTE: With 8 nurses at varying contracts, preferred targets should be achievable
+on most weekdays. The solver will maximise coverage subject to law constraints
+and individual contract hours.
+
+
+DOCTOR ON-CALL COVERAGE
+------------------------
+Doctors not scheduled for a ward shift are expected to be available for
+telephone consultation (beredskap, not beredskap at the ward).
+Weekend on-call rotation is managed separately and is NOT part of this schedule.
+The minimum doctor requirement above reflects ward-present doctors only.
+With 4 doctors, at least 1 can normally cover the ward on any given day.
+
+
+SHIFT ROTATION POLICY
+---------------------
+To promote fairness and work-life balance, the scheduler should distribute
+shift types equitably across all eligible staff over the 8-week horizon.
+
+Guidelines (soft constraints):
+  - No nurse should work more than 4 consecutive evening shifts.
+  - No nurse should work more than 3 consecutive night shifts.
+  - Shift rotation direction: forward rotation is preferred
+    (Day → Evening → Night) when shifts change, not backward rotation.
+    Backward rotation (Night → Evening → Day) is harder on circadian rhythm.
+  - Night shift workers should have at least 2 days off after the last night shift.
+
+
+CONTRACT HOURS
+--------------
+Staff member hours are defined in their individual configuration files.
+The scheduler must not exceed each employee's contracted weekly hours.
+Under-scheduling relative to contract is tracked and flagged in the report.
+
+Standard working week: 5 × 8-hour shifts = 40 hours/week (100% FTE)
+Part-time equivalents:
+  80%  FTE = 4 shifts/week (32 h/week)
+  75%  FTE = 3-4 shifts/week (30 h/week)
+  60%  FTE = 3 shifts/week (24 h/week)
+  50%  FTE = 2-3 shifts/week (20 h/week)
+
+
+ANNUAL LEAVE AND PLANNED ABSENCES
+-----------------------------------
+Planned vacation and specific days off are declared in individual staff
+configuration files. These are treated as hard constraints and cannot
+be overridden by staffing minimums. If minimum staffing cannot be met
+due to simultaneous absences, the system will flag an infeasibility.
+
+
+PUBLIC HOLIDAYS WITHIN PLANNING HORIZON
+-----------------------------------------
+If the planning horizon includes Swedish public holidays (helgdagar),
+they should be treated as Sundays for staffing purposes. Weekend minimums apply.
+Public holidays in the April–June 2026 period:
+  2026-05-01  Första maj (Labour Day)          — falls in planning window
+  2026-05-14  Kristi himmelsfärd (Ascension)   — falls in planning window
+  2026-05-24  Pingstdagen (Whit Sunday)        — falls in planning window
+
+Apply weekend staffing minimums on these dates regardless of weekday.
+
+
+REPORTING REQUIREMENTS
+-----------------------
+At completion of each scheduling cycle the system must produce:
+  1. Per-staff .ics calendar file (importable into Outlook / Google Calendar)
+  2. Admin overview in Excel (.xlsx) with:
+     - Week-by-week grid (dates as columns, staff as rows)
+     - Colour-coded cells by shift type
+     - Summary row: total shifts scheduled per staff vs. contracted
+     - Compliance column: flags any law-constraint violations (must show none)
+  3. LLM-generated narrative report explaining:
+     - Any preferences that could not be honoured and why
+     - Any near-misses or trade-offs
+     - Infeasibility warnings if minimum staffing was not achievable on any day

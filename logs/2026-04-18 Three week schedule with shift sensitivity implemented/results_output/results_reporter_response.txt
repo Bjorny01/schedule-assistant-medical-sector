@@ -1,0 +1,35 @@
+# Schedule Report — Medicin Avdelning 3
+
+**Planning period:** 6 April – 26 April 2026 (3 weeks) · **Solver status:** OPTIMAL
+
+## 1. Executive Summary
+
+The scheduling solver produced an optimal roster for the three-week period covering 11 staff members (8 nurses, 3 doctors). All hard constraints were satisfied and every staff member is within one shift of their contractual target. The main points of attention are thin Friday evening coverage, a heavy concentration of night work on three nurses, and six broken staff preferences — with one staff member (Sofia Ekström) affected twice.
+
+## 2. Compliance Confirmation
+
+Because the solver returned OPTIMAL, the Swedish statutory constraints encoded in the model are met: daily rest (dygnsvila, 11 hours), weekly rest (veckovila, 36 consecutive hours), the ban on night-to-day transitions, and the contracted employment percentages for each staff member. Shift targets are also respected: Klara Svensson is scheduled for 12 shifts against a target of ~11, which is within normal rounding for a 75% contract over three weeks. One item worth verifying outside the model: the roster contains **no doctors on evening or night shifts** across the entire period. If the ward relies on jour/beredskap arrangements for after-hours medical cover, this is expected; if not, it is a gap that should be addressed outside the nurse roster.
+
+## 3. Staffing Coverage Analysis
+
+Weekday day-shifts are consistently well-staffed, typically with 2–5 nurses and 2–3 doctors. The pattern is weaker in two places:
+
+- **Friday evenings** carry only one nurse on all three Fridays (10, 17, 24 April). A single sick-call here would leave the evening uncovered.
+- **Weekends** run lean across the board — two day nurses, one evening nurse, one night nurse. This matches typical weekend activity but leaves little margin for acuity spikes.
+
+Night coverage is delivered by just three nurses: Clas Johansson (5 nights), Klara Svensson (8 nights), and Pelle Ström (8 nights). This is efficient but concentrates fatigue and creates single points of failure if one of them is absent. Monday 13 April is notably strong on days (5 nurses) and could potentially lend a body to a thinner day if workload allows.
+
+## 4. Preference Trade-offs
+
+Six preference requests could not be accommodated. These are real impacts on people's lives, and each one was made because every alternative would have violated a harder rule or left a shift uncovered:
+
+- **Sofia Ekström** was scheduled on both Saturday 11 April and Saturday 25 April against her day-off preferences. She is the staff member most affected and deserves a direct conversation.
+- **Klara Svensson** works Monday 13 April, **Maja Lindqvist** works Saturday 25 April, **Melvin Lindroos** works Sunday 12 April, and **Nora Verazza** works Friday 10 April — each against a single day-off request.
+
+The pattern is that weekend and Friday day-off requests are the hardest to grant, because they collide directly with the ward's thinnest coverage days.
+
+## 5. Recommendations
+
+1. **Reinforce Friday evenings.** Consider whether a second evening nurse can be scheduled on Fridays, either by shifting one of Maja Lindqvist's or Kalle Bergman's Friday-off days or by using a resource pool nurse.
+2. **Have a direct conversation with Sofia Ekström.** Two broken weekend preferences in one period is significant; offering priority on preferences in the next planning cycle would be a reasonable gesture.
+3. **Broaden the night rota.** Concentrating all 21 nights on three nurses is sustainable for three weeks but risky longer-term. Training one additional nurse to take occasional nights would reduce fragility and ease the load on Klara and Pelle.

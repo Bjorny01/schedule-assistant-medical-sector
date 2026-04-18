@@ -14,11 +14,13 @@ from src.config_parser import (
     _parse_allowed_shifts,
     _parse_contract_pct,
     _parse_dates,
+    _parse_dates_with_shifts,
     _parse_department_file,
     _parse_int,
     _parse_shift_list,
     _parse_staff_file,
     _parse_weekdays,
+    _parse_weekdays_with_shifts,
     _parse_with_fallback,
     _read_all_files,
     _staff_from_dict,
@@ -328,7 +330,7 @@ def test_parse_department_file_holidays():
 def test_parse_department_file_empty_uses_defaults():
     dept = _parse_department_file("")
     assert dept.department_name == "Medical Department"
-    assert dept.min_nurses_day == 3
+    assert dept.min_nurses_day == 2
 
 
 # ---------------------------------------------------------------------------
@@ -498,3 +500,183 @@ def test_parse_all_inputs_no_llm(staff_configs_dir, dept_req_file, law_file):
     assert len(result.staff) == 3
     assert result.dept_requirements is not None
     assert result.law_rules is not None
+
+
+# ---------------------------------------------------------------------------
+# _parse_dates_with_shifts  (shift-level off syntax)
+# ---------------------------------------------------------------------------
+
+def test_parse_dates_with_shifts_bare_date_is_whole_day():
+    whole, shifts = _parse_dates_with_shifts("2024-03-15")
+    assert whole == [date(2024, 3, 15)]
+    assert shifts == []
+
+
+def test_parse_dates_with_shifts_single_shift():
+    whole, shifts = _parse_dates_with_shifts("2024-03-15 (night)")
+    assert whole == []
+    assert shifts == [(date(2024, 3, 15), ShiftType.NIGHT)]
+
+
+def test_parse_dates_with_shifts_multiple_shifts_same_date():
+    whole, shifts = _parse_dates_with_shifts("2024-05-01 (evening, night)")
+    assert whole == []
+    assert (date(2024, 5, 1), ShiftType.EVENING) in shifts
+    assert (date(2024, 5, 1), ShiftType.NIGHT) in shifts
+    assert len(shifts) == 2
+
+
+def test_parse_dates_with_shifts_mixed_bare_and_annotated():
+    whole, shifts = _parse_dates_with_shifts(
+        "2024-04-24, 2024-05-01 (evening, night), 2024-05-02"
+    )
+    assert date(2024, 4, 24) in whole
+    assert date(2024, 5, 2) in whole
+    assert (date(2024, 5, 1), ShiftType.EVENING) in shifts
+    assert (date(2024, 5, 1), ShiftType.NIGHT) in shifts
+
+
+def test_parse_dates_with_shifts_empty_parens_treated_as_whole_day():
+    whole, shifts = _parse_dates_with_shifts("2024-03-15 ()")
+    assert whole == [date(2024, 3, 15)]
+    assert shifts == []
+
+
+def test_parse_dates_with_shifts_empty_input():
+    whole, shifts = _parse_dates_with_shifts("")
+    assert whole == []
+    assert shifts == []
+
+
+# ---------------------------------------------------------------------------
+# _parse_weekdays_with_shifts
+# ---------------------------------------------------------------------------
+
+def test_parse_weekdays_with_shifts_bare_weekday_is_whole_day():
+    whole, shifts = _parse_weekdays_with_shifts("Sunday")
+    assert whole == [6]
+    assert shifts == []
+
+
+def test_parse_weekdays_with_shifts_single_shift():
+    whole, shifts = _parse_weekdays_with_shifts("Friday (evening)")
+    assert whole == []
+    assert shifts == [(4, ShiftType.EVENING)]
+
+
+def test_parse_weekdays_with_shifts_multiple_shifts_same_weekday():
+    whole, shifts = _parse_weekdays_with_shifts("Saturday (day, evening)")
+    assert whole == []
+    assert (5, ShiftType.DAY) in shifts
+    assert (5, ShiftType.EVENING) in shifts
+
+
+def test_parse_weekdays_with_shifts_mixed_bare_and_annotated():
+    whole, shifts = _parse_weekdays_with_shifts("Monday, Saturday (day)")
+    assert whole == [0]
+    assert shifts == [(5, ShiftType.DAY)]
+
+
+def test_parse_weekdays_with_shifts_deduplicates():
+    whole, shifts = _parse_weekdays_with_shifts("Monday, Monday")
+    assert whole == [0]
+
+
+def test_parse_weekdays_with_shifts_empty_input():
+    whole, shifts = _parse_weekdays_with_shifts("")
+    assert whole == []
+    assert shifts == []
+
+
+# ---------------------------------------------------------------------------
+# _parse_staff_file — shift-level off fields (fallback path)
+# ---------------------------------------------------------------------------
+
+_SHIFT_OFF_TXT = """\
+Name: Dana
+Role: nurse
+Contract: 100%
+Max shifts per week: 5
+Mandatory days off: 2024-04-08 (night), 2024-04-22
+Recurring unavailability: Sunday, Friday (evening)
+Preferred days off: Monday, Saturday (day)
+"""
+
+
+def test_parse_staff_file_mandatory_shift_off_extracted():
+    staff = _parse_staff_file(_SHIFT_OFF_TXT, date(2024, 1, 1))
+    assert (date(2024, 4, 8), ShiftType.NIGHT) in staff.constraints.mandatory_shifts_off
+
+
+def test_parse_staff_file_mandatory_whole_day_still_extracted():
+    staff = _parse_staff_file(_SHIFT_OFF_TXT, date(2024, 1, 1))
+    assert date(2024, 4, 22) in staff.constraints.mandatory_days_off
+
+
+def test_parse_staff_file_recurring_shift_off_extracted():
+    staff = _parse_staff_file(_SHIFT_OFF_TXT, date(2024, 1, 1))
+    assert (4, ShiftType.EVENING) in staff.constraints.recurring_shifts_off  # Friday evening
+
+
+def test_parse_staff_file_recurring_whole_day_still_extracted():
+    staff = _parse_staff_file(_SHIFT_OFF_TXT, date(2024, 1, 1))
+    assert 6 in staff.constraints.recurring_days_off  # Sunday
+
+
+def test_parse_staff_file_preferred_shift_off_extracted():
+    staff = _parse_staff_file(_SHIFT_OFF_TXT, date(2024, 1, 1))
+    assert (5, ShiftType.DAY) in staff.constraints.preferences.preferred_shifts_off
+
+
+def test_parse_staff_file_preferred_whole_day_still_extracted():
+    staff = _parse_staff_file(_SHIFT_OFF_TXT, date(2024, 1, 1))
+    assert 0 in staff.constraints.preferences.preferred_days_off  # Monday
+
+
+# ---------------------------------------------------------------------------
+# _staff_from_dict — shift-level off fields (LLM JSON path)
+# ---------------------------------------------------------------------------
+
+def test_staff_from_dict_mandatory_shifts_off():
+    staff = _staff_from_dict({
+        "name": "Dana", "role": "nurse", "contract_pct": 1.0,
+        "mandatory_shifts_off": [
+            {"date": "2024-04-08", "shifts": ["night"]},
+        ],
+    })
+    assert (date(2024, 4, 8), ShiftType.NIGHT) in staff.constraints.mandatory_shifts_off
+
+
+def test_staff_from_dict_mandatory_shifts_off_multiple_shifts_per_date():
+    staff = _staff_from_dict({
+        "name": "Dana", "role": "nurse", "contract_pct": 1.0,
+        "mandatory_shifts_off": [
+            {"date": "2024-05-01", "shifts": ["evening", "night"]},
+        ],
+    })
+    pairs = staff.constraints.mandatory_shifts_off
+    assert (date(2024, 5, 1), ShiftType.EVENING) in pairs
+    assert (date(2024, 5, 1), ShiftType.NIGHT) in pairs
+
+
+def test_staff_from_dict_recurring_shifts_off():
+    staff = _staff_from_dict({
+        "name": "Dana", "role": "nurse", "contract_pct": 1.0,
+        "recurring_shifts_off": [{"weekday": 4, "shifts": ["evening"]}],
+    })
+    assert (4, ShiftType.EVENING) in staff.constraints.recurring_shifts_off
+
+
+def test_staff_from_dict_preferred_shifts_off():
+    staff = _staff_from_dict({
+        "name": "Dana", "role": "nurse", "contract_pct": 1.0,
+        "preferred_shifts_off": [{"weekday": 5, "shifts": ["day"]}],
+    })
+    assert (5, ShiftType.DAY) in staff.constraints.preferences.preferred_shifts_off
+
+
+def test_staff_from_dict_shift_off_fields_default_empty():
+    staff = _staff_from_dict({"name": "Dana", "role": "nurse", "contract_pct": 1.0})
+    assert staff.constraints.mandatory_shifts_off == []
+    assert staff.constraints.recurring_shifts_off == []
+    assert staff.constraints.preferences.preferred_shifts_off == []

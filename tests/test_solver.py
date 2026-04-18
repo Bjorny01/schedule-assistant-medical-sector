@@ -16,6 +16,7 @@ from src.models import (
     ShiftType,
     Staff,
     StaffConstraints,
+    StaffPreferences,
     WorkLawRules,
 )
 from src.solver import build_schedule
@@ -247,3 +248,139 @@ def test_infeasible_requirements_returns_none():
     )
     result = build_schedule(inputs, START, num_weeks=1)
     assert result is None
+
+
+# ---------------------------------------------------------------------------
+# TIER 3 HARD: mandatory_shifts_off (shift-level specific date)
+# ---------------------------------------------------------------------------
+
+def test_mandatory_shift_off_blocks_only_specified_shift():
+    """The blocked shift on that date must not be scheduled for that person."""
+    off_date = START + timedelta(days=2)  # Wednesday
+    inputs = ParsedInputs(
+        staff=[
+            _make_nurse("Alice", mandatory_shifts_off=[(off_date, ShiftType.NIGHT)]),
+            _make_nurse("Bob"),
+            _make_doctor("Carol"),
+        ],
+        dept_requirements=_minimal_dept(),
+        law_rules=WorkLawRules(),
+    )
+    schedule = build_schedule(inputs, START, num_weeks=1)
+    assert schedule is not None
+    alice_on_off_date = [
+        a for a in schedule.get_staff_assignments("Alice") if a.date == off_date
+    ]
+    assert all(a.shift_type != ShiftType.NIGHT for a in alice_on_off_date), (
+        f"Alice assigned night despite mandatory_shifts_off: {alice_on_off_date}"
+    )
+
+
+def test_mandatory_shift_off_permits_other_shifts_same_date():
+    """Alice can still work day or evening on a date with only night blocked.
+
+    Setup: 2 nurses — Bob has Mondays off entirely, so Alice is the only nurse
+    available for Monday day. Alice also has a Monday-night mandatory_shifts_off
+    block; that must not prevent her Monday day assignment.
+    """
+    off_date = START  # Monday
+    inputs = ParsedInputs(
+        staff=[
+            _make_nurse("Alice", mandatory_shifts_off=[(off_date, ShiftType.NIGHT)]),
+            _make_nurse("Bob", recurring_days_off=[0]),  # Bob off all Mondays
+            _make_doctor("Carol"),
+        ],
+        dept_requirements=_minimal_dept(),
+        law_rules=WorkLawRules(),
+    )
+    schedule = build_schedule(inputs, START, num_weeks=1)
+    assert schedule is not None
+    alice_mon_day = [
+        a for a in schedule.get_staff_assignments("Alice")
+        if a.date == off_date and a.shift_type == ShiftType.DAY
+    ]
+    assert len(alice_mon_day) == 1
+
+
+# ---------------------------------------------------------------------------
+# TIER 3 HARD: recurring_shifts_off (shift-level recurring weekday)
+# ---------------------------------------------------------------------------
+
+def test_recurring_shift_off_never_schedules_blocked_shift():
+    """Bob never works Friday nights, but other Friday shifts are bookable."""
+    inputs = ParsedInputs(
+        staff=[
+            _make_nurse("Alice"),
+            _make_nurse("Bob", recurring_shifts_off=[(4, ShiftType.NIGHT)]),  # Fri
+            _make_doctor("Carol"),
+        ],
+        dept_requirements=_minimal_dept(),
+        law_rules=WorkLawRules(),
+    )
+    schedule = build_schedule(inputs, START, num_weeks=1)
+    assert schedule is not None
+    for a in schedule.get_staff_assignments("Bob"):
+        if a.date.weekday() == 4:
+            assert a.shift_type != ShiftType.NIGHT, (
+                f"Bob scheduled night on Friday {a.date} despite recurring_shifts_off"
+            )
+
+
+# ---------------------------------------------------------------------------
+# SOFT: preferred_shifts_off  (penalty + broken-pref reporting)
+# ---------------------------------------------------------------------------
+
+def test_preferred_shift_off_reported_when_violated():
+    """Alice must work Mon day (Bob blocked) — the pref-off must be flagged."""
+    inputs = ParsedInputs(
+        staff=[
+            _make_nurse(
+                "Alice",
+                preferences=StaffPreferences(
+                    preferred_shifts_off=[(0, ShiftType.DAY)]  # Mondays (day)
+                ),
+            ),
+            _make_nurse("Bob", recurring_days_off=[0]),  # Bob off all Mondays
+            _make_doctor("Carol"),
+        ],
+        dept_requirements=_minimal_dept(),
+        law_rules=WorkLawRules(),
+    )
+    schedule = build_schedule(inputs, START, num_weeks=1)
+    assert schedule is not None
+    alice_mon_day = [
+        a for a in schedule.get_staff_assignments("Alice")
+        if a.date == START and a.shift_type == ShiftType.DAY
+    ]
+    assert len(alice_mon_day) == 1
+    alice_broken = [m for m in schedule.infeasible_preferences if "Alice" in m]
+    assert any("Monday" in m and "day" in m.lower() for m in alice_broken), (
+        f"Expected Alice broken-pref about Monday day; got: {alice_broken}"
+    )
+
+
+def test_preferred_shift_off_does_not_penalise_other_shifts_same_weekday():
+    """Pref-off on Monday evening must NOT produce a broken-pref when Alice works Monday day."""
+    inputs = ParsedInputs(
+        staff=[
+            _make_nurse(
+                "Alice",
+                preferences=StaffPreferences(
+                    preferred_shifts_off=[(0, ShiftType.EVENING)]  # Monday evening only
+                ),
+            ),
+            _make_nurse("Bob", recurring_days_off=[0]),
+            _make_doctor("Carol"),
+        ],
+        dept_requirements=_minimal_dept(),
+        law_rules=WorkLawRules(),
+    )
+    schedule = build_schedule(inputs, START, num_weeks=1)
+    assert schedule is not None
+    alice_broken = [m for m in schedule.infeasible_preferences if "Alice" in m]
+    assert not any(
+        "evening" in m.lower() and "preference: evening off" in m.lower()
+        for m in alice_broken
+    ), (
+        f"Unexpected Monday-evening pref-off broken-pref for Alice: {alice_broken}"
+    )

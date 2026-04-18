@@ -41,17 +41,23 @@ Either `NURSE` or `DOCTOR`. Used to separate staffing requirements and constrain
 **`StaffPreferences`** (dataclass)
 Holds soft preferences for one staff member — things the scheduler will *try* to honour but cannot guarantee:
 - `preferred_shifts` / `avoid_shifts` — which shift types to aim for or avoid
-- `preferred_days_off` — weekdays the person would like free (0=Monday)
+- `preferred_days_off` — weekdays the person would like free (0=Monday, whole day)
+- `preferred_shifts_off` — `(weekday, shift)` pairs: a specific shift on a specific weekday the person would like free (soft, shift granularity)
 - `max_night_shifts_per_week` — soft weekly night cap
 - `prefer_consecutive_days_off` — if True, the solver penalises scattered rest days
 
 **`StaffConstraints`** (dataclass)
 Holds both hard needs and soft preferences for one staff member:
-- `mandatory_days_off` — specific dates that must be free (hard)
-- `recurring_days_off` — weekdays that are always off (hard), e.g. every Sunday
+- `mandatory_days_off` — specific dates that must be free (hard, whole day)
+- `mandatory_shifts_off` — `(date, shift)` pairs: a specific shift on a specific date must not be scheduled (hard, shift granularity)
+- `recurring_days_off` — weekdays that are always off (hard, whole day), e.g. every Sunday
+- `recurring_shifts_off` — `(weekday, shift)` pairs, e.g. Friday evening always off (hard, shift granularity)
 - `allowed_shifts` — if set, only those shift types are ever scheduled (hard medical/contractual restriction)
 - `max_weekly_shifts` — ceiling from the employment contract (hard)
 - `preferences` — the `StaffPreferences` object above (soft)
+
+Shift-level and whole-day fields are complementary: the solver simply zeros all three
+shift vars for whole-day entries and a single shift var for shift-level entries.
 
 **`Staff`** (dataclass)
 One staff member: name, role, contract percentage, and their `StaffConstraints`. Has two `@property` helpers (`target_shifts_per_week`, `max_shifts_per_week`) that compute derived values so no other module has to repeat the formula.
@@ -126,7 +132,7 @@ CP-SAT is a *constraint programming* solver. You describe the problem as variabl
 shifts[(staff_index, day_index, shift_index)] = BoolVar
 ```
 
-One Boolean variable per (staff member, day, shift type) — `1` if that person works that shift, `0` otherwise. With 12 staff, 56 days, and 3 shift types, this is 12 × 56 × 3 = 2,016 variables. This is small for OR-Tools.
+One Boolean variable per (staff member, day, shift type) — `1` if that person works that shift, `0` otherwise. With 11 staff, 56 days, and 3 shift types, this is 11 × 56 × 3 = 1,848 variables. This is small for OR-Tools.
 
 ### Hard constraints — Tier 1 (law)
 
@@ -149,7 +155,9 @@ For each (day, shift type) combination, the sum of scheduled nurses must be >= t
 ### Hard constraints — Tier 3 (personal)
 
 - **Mandatory days off:** set the three shift variables for that (person, day) to `0`.
-- **Recurring weekday off:** same, but applied to every matching weekday in the 56-day horizon.
+- **Mandatory shifts off:** set one specific shift variable for that (person, date, shift) to `0` — used when only *part* of a day is blocked (e.g. "no night before exam").
+- **Recurring weekday off:** same as mandatory days off, but applied to every matching weekday in the 56-day horizon.
+- **Recurring shifts off:** same as mandatory shifts off, applied to every matching weekday (e.g. "Friday evening always off").
 - **Allowed shifts:** for each forbidden shift type, all 56 day-variables for that shift are set to `0`.
 - **Weekly contract cap:** sum of shifts in each 7-day week <= `max_weekly_shifts`.
 
@@ -160,7 +168,8 @@ The solver minimises a weighted sum. Lower is better:
 | Term | Weight | Effect |
 |------|--------|--------|
 | Avoid-shift penalty | +10 per shift | Strongly discourages scheduling on avoided shift types |
-| Preferred-day-off penalty | +4 per shift | Discourages working on preferred rest days |
+| Preferred-day-off penalty | +4 per shift | Discourages working on preferred rest weekdays (whole day) |
+| Preferred-shift-off penalty | +4 per shift | Discourages working a specific shift on a preferred-off weekday (e.g. Saturday-day off) |
 | Contract fill bonus | −6 per shift | Pulls the solver to schedule as many shifts as possible up to the contract cap |
 | Preferred-shift bonus | −4 per shift | Rewards scheduling on preferred shift types |
 | Excess night shifts | +15 per excess night above soft weekly limit | Discourages over-assigning nights |
@@ -258,10 +267,24 @@ The LLM parser reads these as free-form prose. The fallback parser requires valu
 | `Contract` | — | `80%` |
 | `Max shifts per week` | Hard | `4` |
 | `Allowed shifts` | Hard | `Day only` |
-| `Mandatory days off` | Hard | `2026-04-22` |
-| `Recurring unavailability` | Hard | `Sunday` |
+| `Mandatory days off` | Hard | `2026-04-22` (whole day) or `2026-04-08 (night)` (only that shift) |
+| `Recurring unavailability` | Hard | `Sunday` (whole day) or `Friday (evening)` (only that shift) |
 | `Preferred shifts` | Soft | `Evening, Night` |
 | `Avoid shifts` | Soft | `Night` |
-| `Preferred days off` | Soft | `Friday, Saturday` |
+| `Preferred days off` | Soft | `Friday, Saturday (day)` — bare weekday = whole day; `(shift[, shift])` = only those shifts |
 | `Max night shifts per week` | Soft | `2` |
 | `Consecutive days off` | Soft | `Maximise` |
+
+### Shift-level off — syntax summary
+
+All three rules (mandatory date, recurring weekday, preferred weekday) accept an
+optional `(shift[, shift])` suffix to narrow the off-request to specific shifts:
+
+```
+2026-04-08 (night)           → hard: only night off, day and evening still bookable
+Friday (evening)             → hard: every Friday evening off
+Saturday (day)               → soft: prefer Saturday day off, evening/night fine
+```
+
+A bare date or weekday continues to mean "whole day off" — existing configs
+need no changes.

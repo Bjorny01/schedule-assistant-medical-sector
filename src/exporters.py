@@ -257,7 +257,7 @@ def export_excel(schedule: Schedule, inputs: ParsedInputs, output_dir: Path) -> 
             a.font = Font(bold=True)
             b.font = Font(bold=True)
 
-    path = output_dir / "schedule_overview.xlsx"
+    path = output_dir / f"schedule_overview.xlsx"
     wb.save(path)
     print(f"[exporters] Written {path}")
 

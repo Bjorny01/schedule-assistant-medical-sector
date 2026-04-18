@@ -1,0 +1,146 @@
+=== SYSTEM PROMPT ===
+
+You are an expert healthcare scheduling analyst and communicator.
+You will receive a raw schedule summary for a hospital ward and must produce
+a clear, professional narrative report in Swedish-style plain English suitable
+for the ward manager (avdelningschef).
+
+Structure your report as follows:
+
+1. EXECUTIVE SUMMARY (2-3 sentences: period, solver outcome, headline finding)
+2. COMPLIANCE CONFIRMATION (confirm all Swedish law constraints are met, or flag any issues)
+3. STAFFING COVERAGE ANALYSIS (highlight days/shifts that are thin, well-covered, or at risk)
+4. PREFERENCE TRADE-OFFS (explain which staff preferences could not be met and why,
+   be empathetic and clear — these are people's working conditions)
+5. RECOMMENDATIONS (1-3 actionable suggestions for the ward manager)
+
+Tone: professional, clear, compassionate. Avoid jargon. Keep it under 600 words.
+
+
+=== USER MESSAGE ===
+
+Please produce the schedule report for the following schedule summary.
+
+======================================================================
+SCHEDULE SUMMARY
+Department:     Medicin Avdelning 3 (Med-3)
+Planning period:2026-04-06  to  2026-04-26
+Weeks:          3
+Solver status:  OPTIMAL
+======================================================================
+
+PER-STAFF OVERVIEW
+----------------------------------------------------------------------
+
+Anna Nilsson (nurse, 100%)
+  Scheduled: 15 shifts  (target ~15)  |  Day=4  Eve=11  Night=0
+  Week breakdown:
+    W01 [06 Apr]: E E E . . D E  (5 shifts)
+    W02 [13 Apr]: E E E . . D E  (5 shifts)
+    W03 [20 Apr]: E E E . . D D  (5 shifts)
+
+Clas Johansson (nurse, 100%)
+  Scheduled: 15 shifts  (target ~15)  |  Day=4  Eve=6  Night=5
+  Week breakdown:
+    W01 [06 Apr]: N N . D E E .  (5 shifts)
+    W02 [13 Apr]: D E N N . D .  (5 shifts)
+    W03 [20 Apr]: N . D E E E .  (5 shifts)
+
+Desdemona Kraft (doctor, 100%)
+  Scheduled: 15 shifts  (target ~15)  |  Day=15  Eve=0  Night=0
+  Week breakdown:
+    W01 [06 Apr]: . D D D . D D  (5 shifts)
+    W02 [13 Apr]: . D D D . D D  (5 shifts)
+    W03 [20 Apr]: . D D D . D D  (5 shifts)
+
+Gudrun Hansson (nurse, 60%)
+  Scheduled: 9 shifts  (target ~9)  |  Day=9  Eve=0  Night=0
+  Week breakdown:
+    W01 [06 Apr]: D . . D D . .  (3 shifts)
+    W02 [13 Apr]: D . . D D . .  (3 shifts)
+    W03 [20 Apr]: D . . D D . .  (3 shifts)
+
+Kalle Bergman (nurse, 100%)
+  Scheduled: 15 shifts  (target ~15)  |  Day=11  Eve=4  Night=0
+  Week breakdown:
+    W01 [06 Apr]: D D E E . . D  (5 shifts)
+    W02 [13 Apr]: D D D E . . D  (5 shifts)
+    W03 [20 Apr]: D D D D . . E  (5 shifts)
+
+Klara Svensson (nurse, 75%)
+  Scheduled: 12 shifts  (target ~11)  |  Day=0  Eve=4  Night=8
+  Week breakdown:
+    W01 [06 Apr]: . . . E N N N  (4 shifts)
+    W02 [13 Apr]: N . . . E E N  (4 shifts)
+    W03 [20 Apr]: . . . E N N N  (4 shifts)
+
+Maja Lindqvist (nurse, 100%)
+  Scheduled: 15 shifts  (target ~15)  |  Day=15  Eve=0  Night=0
+  Week breakdown:
+    W01 [06 Apr]: D D D D D . .  (5 shifts)
+    W02 [13 Apr]: D D D D D . .  (5 shifts)
+    W03 [20 Apr]: D D . D D D .  (5 shifts)
+
+Melvin Lindroos (doctor, 100%)
+  Scheduled: 15 shifts  (target ~15)  |  Day=15  Eve=0  Night=0
+  Week breakdown:
+    W01 [06 Apr]: D D D . . D D  (5 shifts)
+    W02 [13 Apr]: D D . D D D .  (5 shifts)
+    W03 [20 Apr]: D . D D D D .  (5 shifts)
+
+Nora Verazza (doctor, 100%)
+  Scheduled: 15 shifts  (target ~15)  |  Day=15  Eve=0  Night=0
+  Week breakdown:
+    W01 [06 Apr]: D D D D D . .  (5 shifts)
+    W02 [13 Apr]: D D D . . D D  (5 shifts)
+    W03 [20 Apr]: D D D . . D D  (5 shifts)
+
+Pelle Ström (nurse, 80%)
+  Scheduled: 12 shifts  (target ~12)  |  Day=0  Eve=4  Night=8
+  Week breakdown:
+    W01 [06 Apr]: . E N N . E .  (4 shifts)
+    W02 [13 Apr]: . N . E N N .  (4 shifts)
+    W03 [20 Apr]: . N N N . E .  (4 shifts)
+
+Sofia Ekström (nurse, 80%)
+  Scheduled: 12 shifts  (target ~12)  |  Day=12  Eve=0  Night=0
+  Week breakdown:
+    W01 [06 Apr]: . . D D . D D  (4 shifts)
+    W02 [13 Apr]: D D . D . . D  (4 shifts)
+    W03 [20 Apr]: D . . . D D D  (4 shifts)
+
+
+DAILY STAFFING LEVELS (nurses / doctors per shift)
+----------------------------------------------------------------------
+Date           Day-D   Day-E   Day-N   Doc-D   Doc-E   Doc-N  
+Mon 2026-04-06 3       1       1       2       0       0      
+Tue 2026-04-07 2       2       1       3       0       0      
+Wed 2026-04-08 2       2       1       3       0       0      
+Thu 2026-04-09 4       2       1       2       0       0      
+Fri 2026-04-10 2       1       1       1       0       0      
+Sat 2026-04-11 2       2       1       2       0       0      
+Sun 2026-04-12 2       1       1       2       0       0      
+Mon 2026-04-13 5       1       1       2       0       0      
+Tue 2026-04-14 3       2       1       3       0       0      
+Wed 2026-04-15 2       1       1       2       0       0      
+Thu 2026-04-16 3       2       1       2       0       0      
+Fri 2026-04-17 2       1       1       1       0       0      
+Sat 2026-04-18 2       1       1       3       0       0      
+Sun 2026-04-19 2       1       1       2       0       0      
+Mon 2026-04-20 4       1       1       2       0       0      
+Tue 2026-04-21 2       1       1       2       0       0      
+Wed 2026-04-22 2       1       1       3       0       0      
+Thu 2026-04-23 3       2       1       2       0       0      
+Fri 2026-04-24 3       1       1       1       0       0      
+Sat 2026-04-25 3       2       1       3       0       0      
+Sun 2026-04-26 2       1       1       2       0       0      
+
+
+BROKEN PREFERENCES
+----------------------------------------------------------------------
+  • Klara Svensson: scheduled on Monday 2026-04-13 (preference: day off)
+  • Maja Lindqvist: scheduled on Saturday 2026-04-25 (preference: day off)
+  • Melvin Lindroos: scheduled on Sunday 2026-04-12 (preference: day off)
+  • Nora Verazza: scheduled on Friday 2026-04-10 (preference: day off)
+  • Sofia Ekström: scheduled on Saturday 2026-04-11 (preference: day off)
+  • Sofia Ekström: scheduled on Saturday 2026-04-25 (preference: day off)

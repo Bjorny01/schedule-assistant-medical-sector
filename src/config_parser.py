@@ -102,10 +102,13 @@ Follow this exact JSON schema:
       "max_weekly_shifts": <int>,
       "mandatory_days_off": ["YYYY-MM-DD", ...],
       "recurring_days_off": [<int 0=Mon .. 6=Sun>, ...],
+      "mandatory_shifts_off": [{"date": "YYYY-MM-DD", "shifts": ["day"|"evening"|"night", ...]}, ...],
+      "recurring_shifts_off": [{"weekday": <int 0=Mon .. 6=Sun>, "shifts": ["day"|"evening"|"night", ...]}, ...],
       "allowed_shifts": null | ["day","evening","night"],
       "preferred_shifts": ["day","evening","night"],
       "avoid_shifts": ["day","evening","night"],
       "preferred_days_off": [<int 0=Mon .. 6=Sun>, ...],
+      "preferred_shifts_off": [{"weekday": <int 0=Mon .. 6=Sun>, "shifts": ["day"|"evening"|"night", ...]}, ...],
       "max_night_shifts_per_week": <int>,
       "max_consecutive_working_days": <int>,
       "prefer_consecutive_days_off": <bool>
@@ -137,7 +140,14 @@ Rules:
 - For any date references like "every Friday", convert to recurring_days_off.
 - For specific date references, output absolute ISO dates (YYYY-MM-DD).
   The schedule start date is provided in the user message.
-- If a field cannot be determined, use a sensible default.
+- Distinguish whole-day from shift-specific off:
+    "2026-04-22"              → mandatory_days_off
+    "2026-04-08 (night)"      → mandatory_shifts_off with shifts=["night"]
+    "Sunday"                  → recurring_days_off
+    "Friday (evening)"        → recurring_shifts_off with shifts=["evening"]
+    "Saturday (day, evening)" → recurring_shifts_off with shifts=["day","evening"]
+  Same split for soft preferred_days_off vs preferred_shifts_off.
+- If a field cannot be determined, use an empty list.
 """
 
 
@@ -231,15 +241,21 @@ def _parse_staff_file(text: str, start_date: date) -> Staff | None:
     contract_pct = _parse_contract_pct(kv.get("contract", kv.get("contract pct", "100%")))
     max_weekly = _parse_int(kv.get("max shifts per week", ""), default=round(5 * contract_pct))
 
-    mandatory_off = _parse_dates(kv.get("mandatory days off", ""))
-    recurring_off = _parse_weekdays(kv.get("recurring unavailability", ""))
+    mandatory_off, mandatory_shifts_off = _parse_dates_with_shifts(
+        kv.get("mandatory days off", "")
+    )
+    recurring_off, recurring_shifts_off = _parse_weekdays_with_shifts(
+        kv.get("recurring unavailability", "")
+    )
 
     allowed_raw = kv.get("allowed shifts", "").lower()
     allowed_shifts = _parse_allowed_shifts(allowed_raw)
 
     pref_raw = kv.get("preferred shifts", "").lower()
     avoid_raw = kv.get("avoid shifts", "").lower()
-    pref_days_raw = kv.get("preferred days off", "").lower()
+    pref_days_off, pref_shifts_off = _parse_weekdays_with_shifts(
+        kv.get("preferred days off", "")
+    )
     max_nights = _parse_int(kv.get("max night shifts per week", ""), default=3)
     max_consec = _parse_int(kv.get("max consecutive working days", ""), default=5)
     consec_off = "consecutive" in kv.get("consecutive days off", "").lower()
@@ -248,7 +264,8 @@ def _parse_staff_file(text: str, start_date: date) -> Staff | None:
     preferences = StaffPreferences(
         preferred_shifts=_parse_shift_list(pref_raw),
         avoid_shifts=_parse_shift_list(avoid_raw),
-        preferred_days_off=_parse_weekday_list(pref_days_raw),
+        preferred_days_off=pref_days_off,
+        preferred_shifts_off=pref_shifts_off,
         max_night_shifts_per_week=max_nights,
         max_consecutive_working_days=max_consec,
         prefer_consecutive_days_off=consec_off,
@@ -257,6 +274,8 @@ def _parse_staff_file(text: str, start_date: date) -> Staff | None:
     constraints = StaffConstraints(
         mandatory_days_off=mandatory_off,
         recurring_days_off=recurring_off,
+        mandatory_shifts_off=mandatory_shifts_off,
+        recurring_shifts_off=recurring_shifts_off,
         allowed_shifts=allowed_shifts,
         max_weekly_shifts=max_weekly,
         preferences=preferences,
@@ -310,6 +329,24 @@ def _staff_from_dict(d: dict[str, Any]) -> Staff:
     mandatory_off = [date.fromisoformat(s) for s in d.get("mandatory_days_off", [])]
     recurring_off = [int(x) for x in d.get("recurring_days_off", [])]
 
+    mandatory_shifts_off: list[tuple[date, ShiftType]] = []
+    for entry in d.get("mandatory_shifts_off", []):
+        entry_date = date.fromisoformat(entry["date"])
+        for st in entry.get("shifts", []):
+            mandatory_shifts_off.append((entry_date, ShiftType(st)))
+
+    recurring_shifts_off: list[tuple[int, ShiftType]] = []
+    for entry in d.get("recurring_shifts_off", []):
+        wd = int(entry["weekday"])
+        for st in entry.get("shifts", []):
+            recurring_shifts_off.append((wd, ShiftType(st)))
+
+    preferred_shifts_off: list[tuple[int, ShiftType]] = []
+    for entry in d.get("preferred_shifts_off", []):
+        wd = int(entry["weekday"])
+        for st in entry.get("shifts", []):
+            preferred_shifts_off.append((wd, ShiftType(st)))
+
     raw_allowed = d.get("allowed_shifts")
     allowed_shifts: list[ShiftType] | None = (
         [ShiftType(s) for s in raw_allowed] if raw_allowed is not None else None
@@ -319,6 +356,7 @@ def _staff_from_dict(d: dict[str, Any]) -> Staff:
         preferred_shifts=[ShiftType(s) for s in d.get("preferred_shifts", [])],
         avoid_shifts=[ShiftType(s) for s in d.get("avoid_shifts", [])],
         preferred_days_off=[int(x) for x in d.get("preferred_days_off", [])],
+        preferred_shifts_off=preferred_shifts_off,
         max_night_shifts_per_week=int(d.get("max_night_shifts_per_week", 3)),
         max_consecutive_working_days=int(d.get("max_consecutive_working_days", 5)),
         prefer_consecutive_days_off=bool(d.get("prefer_consecutive_days_off", False)),
@@ -327,6 +365,8 @@ def _staff_from_dict(d: dict[str, Any]) -> Staff:
     constraints = StaffConstraints(
         mandatory_days_off=mandatory_off,
         recurring_days_off=recurring_off,
+        mandatory_shifts_off=mandatory_shifts_off,
+        recurring_shifts_off=recurring_shifts_off,
         allowed_shifts=allowed_shifts,
         max_weekly_shifts=max_weekly,
         preferences=preferences,
@@ -449,3 +489,85 @@ def _parse_shift_list(raw: str) -> list[ShiftType]:
     if "night" in raw:
         shifts.append(ShiftType.NIGHT)
     return shifts
+
+
+# Pattern: YYYY-MM-DD optionally followed by "(shift[, shift])"
+_DATE_WITH_SHIFTS_RE = re.compile(
+    r"(\d{4}-\d{2}-\d{2})(?:\s*\(([^)]*)\))?"
+)
+
+
+def _parse_dates_with_shifts(
+    raw: str,
+) -> tuple[list[date], list[tuple[date, ShiftType]]]:
+    """
+    Extract date entries, separating bare dates (whole day off) from
+    date+shift entries (specific shift off on that date).
+
+    Examples:
+      "2026-04-09"                 → whole day
+      "2026-04-08 (night)"         → (2026-04-08, NIGHT)
+      "2026-04-22 (day, evening)"  → two tuples for that date
+    """
+    whole_days: list[date] = []
+    shift_entries: list[tuple[date, ShiftType]] = []
+    for m in _DATE_WITH_SHIFTS_RE.finditer(raw):
+        d = date.fromisoformat(m.group(1))
+        inner = (m.group(2) or "").strip().lower()
+        if not inner:
+            whole_days.append(d)
+            continue
+        matched = _parse_shift_list(inner)
+        if matched:
+            for st in matched:
+                shift_entries.append((d, st))
+        else:
+            # Parentheses were present but no recognised shift tokens — treat as whole day.
+            whole_days.append(d)
+    return whole_days, shift_entries
+
+
+def _parse_weekdays_with_shifts(
+    raw: str,
+) -> tuple[list[int], list[tuple[int, ShiftType]]]:
+    """
+    Extract weekday entries, separating bare weekdays (whole day off) from
+    weekday+shift entries.
+
+    Examples:
+      "Sunday, Friday (evening)"        → days=[6], shifts=[(4, EVENING)]
+      "Saturday (day, evening)"         → days=[],  shifts=[(5, DAY), (5, EVENING)]
+    """
+    whole_days: list[int] = []
+    shift_entries: list[tuple[int, ShiftType]] = []
+    # Split on commas that are NOT inside parentheses to iterate per weekday.
+    tokens = re.split(r",\s*(?![^()]*\))", raw)
+    for token in tokens:
+        token = token.strip()
+        if not token:
+            continue
+        # Find weekday name in this token
+        lower = token.lower()
+        wd: int | None = None
+        for name, idx in _WEEKDAY_NAMES.items():
+            # Match as whole word to avoid "sun" matching "sunday" inside another word
+            if re.search(rf"\b{name}\b", lower):
+                wd = idx
+                break
+        if wd is None:
+            continue
+        # Optional "(shift[, shift])" spec
+        paren = re.search(r"\(([^)]*)\)", lower)
+        if paren is None:
+            if wd not in whole_days:
+                whole_days.append(wd)
+            continue
+        matched = _parse_shift_list(paren.group(1))
+        if matched:
+            for st in matched:
+                if (wd, st) not in shift_entries:
+                    shift_entries.append((wd, st))
+        else:
+            if wd not in whole_days:
+                whole_days.append(wd)
+    return whole_days, shift_entries

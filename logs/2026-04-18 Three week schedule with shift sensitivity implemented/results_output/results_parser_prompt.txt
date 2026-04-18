@@ -1,0 +1,942 @@
+=== SYSTEM PROMPT ===
+
+You are a scheduling data extractor for a medical rostering system.
+You will receive plain-text configuration files for a hospital department
+and must return a single JSON object that captures all scheduling constraints.
+
+Follow this exact JSON schema:
+
+{
+  "staff": [
+    {
+      "name": "<full name>",
+      "role": "nurse" | "doctor",
+      "contract_pct": <float 0.0-1.0>,
+      "max_weekly_shifts": <int>,
+      "mandatory_days_off": ["YYYY-MM-DD", ...],
+      "recurring_days_off": [<int 0=Mon .. 6=Sun>, ...],
+      "mandatory_shifts_off": [{"date": "YYYY-MM-DD", "shifts": ["day"|"evening"|"night", ...]}, ...],
+      "recurring_shifts_off": [{"weekday": <int 0=Mon .. 6=Sun>, "shifts": ["day"|"evening"|"night", ...]}, ...],
+      "allowed_shifts": null | ["day","evening","night"],
+      "preferred_shifts": ["day","evening","night"],
+      "avoid_shifts": ["day","evening","night"],
+      "preferred_days_off": [<int 0=Mon .. 6=Sun>, ...],
+      "preferred_shifts_off": [{"weekday": <int 0=Mon .. 6=Sun>, "shifts": ["day"|"evening"|"night", ...]}, ...],
+      "max_night_shifts_per_week": <int>,
+      "max_consecutive_working_days": <int>,
+      "prefer_consecutive_days_off": <bool>
+    }
+  ],
+  "department": {
+    "department_name": "<string>",
+    "min_nurses_day": <int>,
+    "min_nurses_evening": <int>,
+    "min_nurses_night": <int>,
+    "min_doctors_day": <int>,
+    "min_doctors_evening": <int>,
+    "min_doctors_night": <int>,
+    "min_nurses_weekend_day": <int>,
+    "min_nurses_weekend_evening": <int>,
+    "min_nurses_weekend_night": <int>,
+    "min_doctors_weekend_day": <int>,
+    "min_doctors_weekend_evening": <int>,
+    "min_doctors_weekend_night": <int>,
+    "public_holidays": ["YYYY-MM-DD", ...]
+  }
+}
+
+Rules:
+- Output ONLY valid JSON — no markdown fences, no commentary.
+- contract_pct: 100% → 1.0,  80% → 0.8,  75% → 0.75,  60% → 0.6, etc.
+- allowed_shifts null means all three shift types are allowed.
+- recurring_days_off uses integers: 0=Monday, 1=Tuesday, ..., 6=Sunday.
+- For any date references like "every Friday", convert to recurring_days_off.
+- For specific date references, output absolute ISO dates (YYYY-MM-DD).
+  The schedule start date is provided in the user message.
+- Distinguish whole-day from shift-specific off:
+    "2026-04-22"              → mandatory_days_off
+    "2026-04-08 (night)"      → mandatory_shifts_off with shifts=["night"]
+    "Sunday"                  → recurring_days_off
+    "Friday (evening)"        → recurring_shifts_off with shifts=["evening"]
+    "Saturday (day, evening)" → recurring_shifts_off with shifts=["day","evening"]
+  Same split for soft preferred_days_off vs preferred_shifts_off.
+- If a field cannot be determined, use an empty list.
+
+
+=== USER MESSAGE ===
+
+Schedule start date: 2026-04-20
+
+=== FILE: staff:anna ===
+===================================================================
+STAFF CONFIGURATION FILE — Med-3 Rostering System
+===================================================================
+
+PERSONAL INFORMATION
+--------------------
+Name:           Anna Nilsson
+Role:           Nurse (Sjuksköterska)
+Employee ID:    SSK-007
+Contract:       Full-time (100%)
+Max shifts per week: 5
+
+SHIFT AVAILABILITY
+------------------
+Allowed shifts: Day, Evening, Night
+(All shifts allowed)
+
+MANDATORY DAYS OFF (hard constraint — must not be scheduled)
+-------------------------------------------------------------
+Syntax: "YYYY-MM-DD" = whole day off, "YYYY-MM-DD (shift[, shift])" = only
+those shifts off on that date.
+
+2026-04-24                    Wedding anniversary — approved by manager in advance.
+2026-05-01 (evening, night)   Evening and night must be free — they would spill
+                              into her daughter's graduation day on 2026-05-02.
+2026-05-02                    Daughter's graduation — whole day off.
+
+RECURRING UNAVAILABILITY (hard constraint)
+------------------------------------------
+None.
+
+SHIFT PREFERENCES (soft constraint — schedule will try to honour)
+-----------------------------------------------------------------
+Preferred shifts:   Evening, Day
+Avoid shifts:       Night (dislikes nights but will do them if needed)
+Preferred days off: Thursday, Friday (would like most weekends to start early)
+Max night shifts per week:   1
+Max consecutive working days: 5
+
+ADDITIONAL NOTES
+----------------
+Anna is a full-time nurse with nearly 10 years of experience on Med-3.
+She is a competent all-rounder and a natural mentor to newer staff.
+She prefers evening shifts when not doing days — the pace suits her.
+She strongly dislikes night shifts due to the impact on her young family
+but understands the need for them operationally. She asks to be limited
+to at most 1 night per week where possible.
+Note on 2026-05-01 / 2026-05-02: the two shift-specific entries above
+("evening, night" on 2026-05-01 plus the whole day 2026-05-02) cover the
+graduation-day requirement — she can still work a day shift on 2026-05-01
+if the schedule needs her.
+
+
+=== FILE: staff:clas ===
+===================================================================
+STAFF CONFIGURATION FILE — Med-3 Rostering System
+===================================================================
+
+PERSONAL INFORMATION
+--------------------
+Name:           Clas Johansson
+Role:           Nurse (Sjuksköterska)
+Employee ID:    SSK-005
+Contract:       Full-time (100%)
+Max shifts per week: 5
+
+SHIFT AVAILABILITY
+------------------
+Allowed shifts: Day, Evening, Night
+(All shifts allowed)
+
+MANDATORY DAYS OFF (hard constraint — must not be scheduled)
+-------------------------------------------------------------
+2026-04-17    Birthday celebration — pre-booked travel (day off requested
+              and approved in advance by ward manager).
+2026-05-22    Conference: Riksstämman för sjuksköterskor — attending
+              professional nursing conference, all-day.
+2026-05-23    Conference day 2 (same conference).
+
+RECURRING UNAVAILABILITY (hard constraint)
+------------------------------------------
+None.
+
+SHIFT PREFERENCES (soft constraint — schedule will try to honour)
+-----------------------------------------------------------------
+Preferred shifts:   Day, Evening
+Avoid shifts:       None (comfortable with all shift types)
+Preferred days off: Sunday
+Max night shifts per week:   2
+Max consecutive working days: 5
+
+ADDITIONAL NOTES
+----------------
+Clas is a flexible full-time nurse who is comfortable working all three shift
+types. He particularly enjoys the team dynamics on day and evening shifts.
+He is willing to cover nights when needed but prefers them not to dominate
+his schedule. He appreciates Sundays off when possible to attend church.
+Clas is also trained as a medication nurse (läkemedelsansvarig) and should
+be prioritised for day shifts when special medication management is required.
+
+
+=== FILE: staff:desdemona ===
+===================================================================
+STAFF CONFIGURATION FILE — Med-3 Rostering System
+===================================================================
+
+PERSONAL INFORMATION
+--------------------
+Name:           Desdemona Kraft
+Role:           Doctor (Läkare) — Specialist in Internal Medicine
+Employee ID:    LKR-002
+Contract:       Full-time (100%)
+Max shifts per week: 5
+
+SHIFT AVAILABILITY
+------------------
+Allowed shifts: Day, Evening
+HARD CONSTRAINT: Desdemona is not available for night shifts. She has an
+academic appointment at Karolinska Institutet and uses early mornings for
+research; night work would prevent this. This is a standing agreement with
+the department head.
+
+MANDATORY DAYS OFF (hard constraint — must not be scheduled)
+-------------------------------------------------------------
+Every Friday    — RECURRING HARD CONSTRAINT. Desdemona dedicates Fridays to
+                  her research role at the university. This is a formal
+                  50/50 clinical/academic split in her employment contract.
+                  She is never available on Fridays — see recurring section.
+
+2026-04-13    Easter week (academic institution closed — travel planned).
+2026-04-24    Doctoral thesis defence she is supervising (all-day obligation).
+2026-05-21    International cardiology symposium (presenting — all-day).
+2026-05-22    Symposium day 2 (Stockholm — overnight stay, all-day).
+
+RECURRING UNAVAILABILITY (hard constraint)
+------------------------------------------
+Friday     — Research day at university. NEVER schedule on Fridays.
+             This is written into her employment contract.
+
+SHIFT PREFERENCES (soft constraint — schedule will try to honour)
+-----------------------------------------------------------------
+Preferred shifts:          Day
+Avoid shifts:              Night (hard constraint already enforced)
+Preferred days off:        Monday (uses Monday mornings for paper writing)
+Max night shifts per week: 0 (hard medical/contractual restriction)
+Max consecutive working days: 4
+
+ADDITIONAL NOTES
+----------------
+Desdemona is a specialist physician with a combined clinical and academic role.
+Her Fridays are non-negotiable research days at the university (Karolinska).
+She works the remaining 4 weekdays (Mon–Thu) plus occasional weekends,
+amounting to a full clinical FTE when combined with her academic day.
+She is a highly skilled clinician and preferred for complex patient cases.
+She prefers day shifts for the same reason she avoids nights — research
+requires alertness in the early morning hours.
+
+
+=== FILE: staff:gudrun ===
+===================================================================
+STAFF CONFIGURATION FILE — Med-3 Rostering System
+===================================================================
+
+PERSONAL INFORMATION
+--------------------
+Name:           Gudrun Hansson
+Role:           Nurse (Sjuksköterska)
+Employee ID:    SSK-004
+Contract:       60%
+Max shifts per week: 3
+
+SHIFT AVAILABILITY
+------------------
+Allowed shifts: Day only
+HARD CONSTRAINT: Gudrun cannot work evening or night shifts. This is
+documented in a formal agreement with the ward manager due to sole
+caregiving responsibilities for two children (no evening childcare
+available). This restriction is permanent and non-negotiable.
+
+MANDATORY DAYS OFF (hard constraint — must not be scheduled)
+-------------------------------------------------------------
+2026-04-14    Parent-teacher conference at children's school (all-day)
+2026-05-27    Child's medical appointment — cannot be rescheduled.
+2026-05-28    Follow-up appointment (same child, next day).
+
+RECURRING UNAVAILABILITY (hard constraint)
+------------------------------------------
+Wednesday   — Gudrun's contractual part-time day off. She works
+              Monday, Tuesday, Thursday, Friday at most (and some weekends).
+              Wednesdays are always off — this is in her employment contract.
+
+SHIFT PREFERENCES (soft constraint — schedule will try to honour)
+-----------------------------------------------------------------
+Preferred shifts:   Day (only allowed shift)
+Avoid shifts:       Evening, Night (hard constraint already — never schedule)
+Preferred days off: Saturday, Sunday (wants to maximise family time on weekends,
+                    but understands occasional weekend shifts are necessary)
+Max night shifts per week:   0 (not applicable — nights not allowed)
+Max consecutive working days: 3
+
+ADDITIONAL NOTES
+----------------
+Gudrun is a highly experienced nurse who returned from parental leave 18 months
+ago on a reduced schedule. She is extremely reliable during her available hours.
+Her 60% contract means approximately 3 day shifts per week.
+She is available Mon, Tue, Thu, Fri, and sometimes Sat or Sun.
+Wednesdays and all evenings/nights are strictly off-limits.
+The scheduler must never schedule Gudrun on evenings or nights.
+
+
+=== FILE: staff:kalle ===
+===================================================================
+STAFF CONFIGURATION FILE — Med-3 Rostering System
+===================================================================
+
+PERSONAL INFORMATION
+--------------------
+Name:           Kalle Bergman
+Role:           Nurse (Sjuksköterska)
+Employee ID:    SSK-003
+Contract:       Full-time (100%)
+Max shifts per week: 5
+
+SHIFT AVAILABILITY
+------------------
+Allowed shifts: Day, Evening, Night
+(All shifts allowed)
+
+MANDATORY DAYS OFF (hard constraint — must not be scheduled)
+-------------------------------------------------------------
+2026-04-30    Moving day — new apartment. Fixed appointment with movers.
+2026-05-01    Första maj (Labour Day) — personal conviction, does not work.
+2026-06-01    Last day of 8-week horizon — dentist appointment booked.
+
+RECURRING UNAVAILABILITY (hard constraint)
+------------------------------------------
+Monday evening and night   — Kalle attends a distance-learning nursing
+                             specialisation course every Monday evening
+                             (online, 18:00–21:00). He cannot work evening
+                             or night shifts on Mondays.
+                             Day shifts on Mondays are fine.
+
+SHIFT PREFERENCES (soft constraint — schedule will try to honour)
+-----------------------------------------------------------------
+Preferred shifts:   Day, Evening
+Avoid shifts:       Night (prefers to avoid but accepts up to 2/week)
+Preferred days off: Friday, Saturday (band rehearsal Friday evenings)
+Max night shifts per week:   2
+Max consecutive working days: 5
+
+ADDITIONAL NOTES
+----------------
+Kalle is studying for a specialist nursing qualification part-time.
+He is a flexible and adaptable team member otherwise.
+He plays drums in a local band and has rehearsals most Friday evenings,
+so he strongly prefers not to work evening or night shifts on Fridays,
+though this is a soft preference, not a hard constraint.
+He is happy to do his share of nights but prefers no more than 2 per week.
+
+
+=== FILE: staff:klara ===
+===================================================================
+STAFF CONFIGURATION FILE — Med-3 Rostering System
+===================================================================
+
+PERSONAL INFORMATION
+--------------------
+Name:           Klara Svensson
+Role:           Nurse (Sjuksköterska)
+Employee ID:    SSK-008
+Contract:       75%
+Max shifts per week: 4
+
+SHIFT AVAILABILITY
+------------------
+Allowed shifts: Day, Evening, Night
+(All shifts allowed — see preferences below)
+
+MANDATORY DAYS OFF (hard constraint — must not be scheduled)
+-------------------------------------------------------------
+2026-04-27    Religious observance (Valborg/Walpurgis Night — personal
+              conviction, approved standing exception).
+2026-04-28    Recovery/observance day (same occasion).
+2026-05-19    Partner's graduation — pre-approved leave.
+
+RECURRING UNAVAILABILITY (hard constraint)
+------------------------------------------
+None.
+
+SHIFT PREFERENCES (soft constraint — schedule will try to honour)
+-----------------------------------------------------------------
+Preferred shifts:   Night, Evening
+Avoid shifts:       None (no specific aversions)
+Preferred days off: Monday, Tuesday (prefers rest early in the week
+                    after weekend night shifts)
+Max night shifts per week:   3
+Max consecutive working days: 4
+
+ADDITIONAL NOTES
+----------------
+Klara is a 75% nurse who actively prefers night and evening shifts.
+She is studying part-time for a master's degree in nursing science and
+finds that night shifts give her daytime hours for academic work.
+She is a reliable and self-sufficient night worker, comfortable working
+with minimal supervision. She is new to Med-3 (joined 6 months ago)
+but has 4 years of prior ward experience.
+At 75%, she works approximately 3-4 shifts per week.
+She would ideally like her days off clustered at the start of the week
+after a run of night shifts, to allow proper circadian recovery.
+
+
+=== FILE: staff:maja ===
+===================================================================
+STAFF CONFIGURATION FILE — Med-3 Rostering System
+===================================================================
+
+PERSONAL INFORMATION
+--------------------
+Name:           Maja Lindqvist
+Role:           Nurse (Sjuksköterska)
+Employee ID:    SSK-001
+Contract:       Full-time (100%)
+Max shifts per week: 5
+
+SHIFT AVAILABILITY
+------------------
+Allowed shifts: Day, Evening, Night
+(No shift type is completely excluded — see preferences below)
+
+MANDATORY DAYS OFF (hard constraint — must not be scheduled)
+-------------------------------------------------------------
+2026-04-22    Daughter's school graduation ceremony (all-day)
+2026-05-08    Medical appointment (pre-booked, cannot be moved)
+
+RECURRING UNAVAILABILITY (hard constraint)
+------------------------------------------
+None. Maja has no fixed recurring unavailability.
+
+SHIFT PREFERENCES (soft constraint — schedule will try to honour)
+-----------------------------------------------------------------
+Preferred shifts:   Day
+Avoid shifts:       Night
+Preferred days off: Saturday, Sunday (would like at least one free weekend
+                    per 4-week block, but understands operational demands)
+Max night shifts per week:   1
+Max consecutive working days: 5
+
+ADDITIONAL NOTES
+----------------
+Maja is the most senior nurse on the ward and often acts as shift lead
+on day shifts. She is reliable and flexible within the constraints above.
+She has expressed that working too many consecutive nights affects her
+sleep quality significantly, hence the strong preference to avoid nights.
+She is happy to do occasional nights when operationally necessary.
+
+
+=== FILE: staff:melvin ===
+===================================================================
+STAFF CONFIGURATION FILE — Med-3 Rostering System
+===================================================================
+
+PERSONAL INFORMATION
+--------------------
+Name:           Melvin Lindroos
+Role:           Doctor (Läkare) — Junior Attending (ST-läkare)
+Employee ID:    LKR-004
+Contract:       Full-time (100%)
+Max shifts per week: 5
+
+SHIFT AVAILABILITY
+------------------
+Allowed shifts: Day, Evening, Night
+(All shift types allowed — as an ST-läkare, Melvin works all shifts
+as part of his specialist training requirements)
+
+MANDATORY DAYS OFF (hard constraint — must not be scheduled)
+-------------------------------------------------------------
+Syntax: "YYYY-MM-DD" = whole day off, "YYYY-MM-DD (shift[, shift])" = only
+those shifts off on that date.
+
+2026-04-08 (night)    Protected rest — night before the written specialist exam.
+2026-04-09            Specialist training exam (written) — full day at exam centre.
+2026-04-10            Oral examination (continuation of specialist exam — all day).
+2026-05-06            Mandatory ST-läkare training day at hospital education centre.
+2026-05-20            Mandatory ST-läkare training day (recurring monthly).
+
+RECURRING UNAVAILABILITY (hard constraint)
+------------------------------------------
+None fixed beyond the monthly training days above.
+
+SHIFT PREFERENCES (soft constraint — schedule will try to honour)
+-----------------------------------------------------------------
+Preferred shifts:          Day, Evening
+Avoid shifts:              None (training requirements include night work)
+Preferred days off:        Sunday
+Max night shifts per week: 2
+Max consecutive working days: 5
+
+ADDITIONAL NOTES
+----------------
+Melvin is a specialist trainee (ST-läkare) in his second year of internal
+medicine training. His training plan requires exposure to all shift types,
+including nights, so he cannot be excluded from nights the way senior doctors
+might be. However, it is good practice to ensure he works no more than 2
+nights per week to maintain learning quality.
+He has mandatory training days on the first Wednesday of each month which
+are protected by his specialist training programme.
+His exam on 2026-04-09 and 2026-04-10 is a significant milestone. The night
+of 2026-04-08 is now a hard shift-level constraint (see above) to guarantee
+he has proper rest before the written exam.
+Melvin is enthusiastic and reliable, and an asset on evening shifts where
+his energy and availability for patient queries is valuable.
+Note: as an ST-läkare, Melvin should ideally work alongside a senior
+physician (Nora, Desdemona, or Karin) during day shifts for supervision.
+
+
+=== FILE: staff:nora ===
+===================================================================
+STAFF CONFIGURATION FILE — Med-3 Rostering System
+===================================================================
+
+PERSONAL INFORMATION
+--------------------
+Name:           Nora Verazza
+Role:           Doctor (Läkare) — Clinical Lead
+Employee ID:    LKR-001
+Contract:       Full-time (100%)
+Max shifts per week: 5
+
+SHIFT AVAILABILITY
+------------------
+Allowed shifts: Day only
+As Clinical Lead (verksamhetschef/medicinskt ledningsansvarig), Nora
+is required to be present during core business hours. Evening and night
+shifts are not part of her role at this department level.
+
+MANDATORY DAYS OFF (hard constraint — must not be scheduled)
+-------------------------------------------------------------
+2026-04-16    National clinical leadership conference (Stockholm) — all day
+2026-04-17    Conference day 2 (same conference — pre-approved)
+2026-05-11    Board meeting at hospital management level — all day
+2026-05-12    Follow-up debrief meeting — schedule off to ensure availability.
+
+RECURRING UNAVAILABILITY (hard constraint)
+------------------------------------------
+None fixed. However, Nora typically uses Friday afternoons for
+administrative duties (ward reports, quality metrics). Scheduling her
+on Fridays is acceptable but Friday evenings are never applicable
+(day-shifts-only policy already handles this).
+
+SHIFT PREFERENCES (soft constraint — schedule will try to honour)
+-----------------------------------------------------------------
+Preferred shifts:          Day
+Avoid shifts:              Evening, Night (hard constraint already above)
+Preferred days off:        Friday (for administrative work — soft preference only)
+Max night shifts per week: 0 (not applicable — day shifts only)
+Consecutive days off:      MAXIMISE — Nora strongly prefers that her days off
+                           are grouped together rather than scattered across the
+                           week. When possible, schedule her rest days as
+                           consecutive blocks (e.g. Fri–Sat–Sun rather than
+                           Wed + Sat separately).
+
+ADDITIONAL NOTES
+----------------
+Nora is the clinical lead for Med-3. Her ward presence during day shifts
+is important for team continuity, supervision, and patient rounds.
+She manages the department's quality work and is often in meetings
+on Mondays (team rounds) and Thursdays (department meetings), but these
+occur within her day shift and do not affect scheduling.
+She has expressed a preference for Fridays off to focus on administration,
+but this is a soft preference — she will work Fridays when needed.
+Her strong preference for consecutive days off reflects a desire to
+use rest periods for meaningful recovery and personal activities.
+
+
+=== FILE: staff:pelle ===
+===================================================================
+STAFF CONFIGURATION FILE — Med-3 Rostering System
+===================================================================
+
+PERSONAL INFORMATION
+--------------------
+Name:           Pelle Ström
+Role:           Nurse (Sjuksköterska)
+Employee ID:    SSK-002
+Contract:       80%
+Max shifts per week: 4
+
+SHIFT AVAILABILITY
+------------------
+Allowed shifts: Day, Evening, Night
+(All shifts allowed — see strong preferences below)
+
+MANDATORY DAYS OFF (hard constraint — must not be scheduled)
+-------------------------------------------------------------
+2026-04-10    Family commitment (non-negotiable)
+2026-05-15    Recurrent union meeting (all-day obligation as union rep)
+2026-05-29    Recurrent union meeting (all-day obligation as union rep)
+
+RECURRING UNAVAILABILITY (hard constraint)
+------------------------------------------
+Sunday     — Family day. Pelle cannot be scheduled on Sundays under any
+             circumstances. This is a standing agreement with management.
+
+SHIFT PREFERENCES (soft constraint — schedule will try to honour)
+-----------------------------------------------------------------
+Preferred shifts:   Evening, Night
+Avoid shifts:       Day
+Preferred days off: Monday, Saturday (day)
+Max night shifts per week:   3
+Max consecutive working days: 4
+
+Note on "Preferred days off" syntax:
+  - "Monday"          = prefer whole Monday off (long-weekend pattern).
+  - "Saturday (day)"  = prefer the Saturday *day* shift off — Saturday evening
+                        or night are still fine, and he often prefers those.
+
+ADDITIONAL NOTES
+----------------
+Pelle is an experienced night-shift nurse and actually prefers working evenings
+and nights. He has a young child and finds that working evenings/nights allows
+him to spend daytime hours with the family while the child is at school.
+He is the union representative (facklig representant) for the nurses on Med-3,
+hence the recurring union meeting obligations on specific Fridays.
+At 80%, he expects approximately 4 shifts per week on average.
+
+
+=== FILE: staff:sofia ===
+===================================================================
+STAFF CONFIGURATION FILE — Med-3 Rostering System
+===================================================================
+
+PERSONAL INFORMATION
+--------------------
+Name:           Sofia Ekström
+Role:           Nurse (Sjuksköterska)
+Employee ID:    SSK-006
+Contract:       80%
+Max shifts per week: 4
+
+SHIFT AVAILABILITY
+------------------
+Allowed shifts: Day, Evening
+HARD CONSTRAINT: Sofia has a documented sleep disorder (hypersomnia) that
+makes night shifts medically inadvisable. Her occupational health physician
+(företagshälsovård) has issued a written recommendation against night work.
+She must not be scheduled for night shifts.
+
+MANDATORY DAYS OFF (hard constraint — must not be scheduled)
+-------------------------------------------------------------
+2026-04-21    Planned surgery (outpatient, recovery same day — needs day off)
+2026-04-22    Recovery day following procedure.
+2026-04-23    Recovery day (precautionary — may return 2026-04-24 if well)
+2026-05-05    Half-marathon race — pre-registered, non-refundable.
+
+RECURRING UNAVAILABILITY (hard constraint)
+------------------------------------------
+None fixed, beyond no night shifts (see shift availability above).
+
+SHIFT PREFERENCES (soft constraint — schedule will try to honour)
+-----------------------------------------------------------------
+Preferred shifts:   Day
+Avoid shifts:       Night (hard medical restriction — already enforced above)
+Preferred days off: Saturday (partner works weekends — prefers to align)
+Max night shifts per week:   0 (medical restriction)
+Max consecutive working days: 4
+
+ADDITIONAL NOTES
+----------------
+Sofia is an 80% nurse who is medically restricted from night work. This is
+a formal occupational health determination, not just a preference.
+She is scheduled for a minor outpatient procedure on 2026-04-21 and needs
+the surrounding days off for recovery — approximately 3 days.
+She is otherwise highly motivated and prefers day shifts.
+At 80%, she expects around 4 shifts per week.
+
+
+=== FILE: department ===
+DEPARTMENT STAFFING REQUIREMENTS
+=================================
+Department:     Medicin Avdelning 3 (Med-3)
+Hospital:       Länssjukhuset Exempel
+Planning unit:  Shift scheduling — rolling 8-week horizon
+Last updated:   2026-03-31
+
+OVERVIEW
+--------
+Med-3 is a 16-bed general internal medicine ward operating 24 hours a day,
+7 days a week. The ward employs registered nurses (sjuksköterskor) and
+specialist physicians (läkare). Night nursing coverage is supplemented by
+a hospital-wide nursing pool for overflow situations.
+
+Roles in scope for this scheduling system:
+  - Registered Nurses (Sjuksköterska / SSK): Maja, Pelle, Kalle, Gudrun,
+                                              Clas, Sofia, Anna, Klara
+  - Physicians / Doctors (Läkare):           Nora, Desdemona, Karin, Melvin
+
+
+SHIFT DEFINITIONS
+-----------------
+Shift   Code   Start   End    Duration   Description
+-----   ----   -----   ---    --------   -----------
+Day     D      07:00   15:00   8 h       Main ward shift. Full clinical activity.
+Evening E      15:00   23:00   8 h       Reduced staffing. Admission and evening rounds.
+Night   N      23:00   07:00   8 h       Minimal staffing. Monitoring + acute care only.
+
+All shifts include a 30-minute unpaid break (per Arbetstidslagen §15).
+Effective clinical hours per shift: 7.5 hours.
+
+
+MINIMUM STAFFING REQUIREMENTS (Hard Operational Constraints)
+-------------------------------------------------------------
+These are the minimum headcounts that MUST be met. The scheduler treats
+these as non-negotiable hard constraints (Tier 2).
+
+WEEKDAYS (Monday–Friday):
+  Shift       Nurses (min)   Doctors (min)   Notes
+  ---------   ------------   -------------   -----
+  Day         2              1               Patient-to-nurse ratio on 16-bed ward
+  Evening     1              0               On-call doctor covers (see below)
+  Night       1              0               On-call covers; nursing pool available
+
+WEEKENDS (Saturday–Sunday):
+  Shift       Nurses (min)   Doctors (min)   Notes
+  ---------   ------------   -------------   -----
+  Day         2              1               Reduced but must maintain medical supervision
+  Evening     1              0               On-call doctor covers
+  Night       1              0               Nursing pool supplement available
+
+PREFERRED STAFFING (Soft Constraints — scheduler should aim for but cannot guarantee):
+  Weekday Day:       4 nurses,  1 doctor  (ideal for patient load)
+  Weekday Evening:   3 nurses,  0 doctors
+  Night (all days):  2 nurses,  0 doctors
+  Weekend Day:       3 nurses,  1 doctor
+
+NOTE: With 8 nurses at varying contracts, preferred targets should be achievable
+on most weekdays. The solver will maximise coverage subject to law constraints
+and individual contract hours.
+
+
+DOCTOR ON-CALL COVERAGE
+------------------------
+Doctors not scheduled for a ward shift are expected to be available for
+telephone consultation (beredskap, not beredskap at the ward).
+Weekend on-call rotation is managed separately and is NOT part of this schedule.
+The minimum doctor requirement above reflects ward-present doctors only.
+With 4 doctors, at least 1 can normally cover the ward on any given day.
+
+
+SHIFT ROTATION POLICY
+---------------------
+To promote fairness and work-life balance, the scheduler should distribute
+shift types equitably across all eligible staff over the 8-week horizon.
+
+Guidelines (soft constraints):
+  - No nurse should work more than 4 consecutive evening shifts.
+  - No nurse should work more than 3 consecutive night shifts.
+  - Shift rotation direction: forward rotation is preferred
+    (Day → Evening → Night) when shifts change, not backward rotation.
+    Backward rotation (Night → Evening → Day) is harder on circadian rhythm.
+  - Night shift workers should have at least 2 days off after the last night shift.
+
+
+CONTRACT HOURS
+--------------
+Staff member hours are defined in their individual configuration files.
+The scheduler must not exceed each employee's contracted weekly hours.
+Under-scheduling relative to contract is tracked and flagged in the report.
+
+Standard working week: 5 × 8-hour shifts = 40 hours/week (100% FTE)
+Part-time equivalents:
+  80%  FTE = 4 shifts/week (32 h/week)
+  75%  FTE = 3-4 shifts/week (30 h/week)
+  60%  FTE = 3 shifts/week (24 h/week)
+  50%  FTE = 2-3 shifts/week (20 h/week)
+
+
+ANNUAL LEAVE AND PLANNED ABSENCES
+-----------------------------------
+Planned vacation and specific days off are declared in individual staff
+configuration files. These are treated as hard constraints and cannot
+be overridden by staffing minimums. If minimum staffing cannot be met
+due to simultaneous absences, the system will flag an infeasibility.
+
+
+PUBLIC HOLIDAYS WITHIN PLANNING HORIZON
+-----------------------------------------
+If the planning horizon includes Swedish public holidays (helgdagar),
+they should be treated as Sundays for staffing purposes. Weekend minimums apply.
+Public holidays in the April–June 2026 period:
+  2026-05-01  Första maj (Labour Day)          — falls in planning window
+  2026-05-14  Kristi himmelsfärd (Ascension)   — falls in planning window
+  2026-05-24  Pingstdagen (Whit Sunday)        — falls in planning window
+
+Apply weekend staffing minimums on these dates regardless of weekday.
+
+
+REPORTING REQUIREMENTS
+-----------------------
+At completion of each scheduling cycle the system must produce:
+  1. Per-staff .ics calendar file (importable into Outlook / Google Calendar)
+  2. Admin overview in Excel (.xlsx) with:
+     - Week-by-week grid (dates as columns, staff as rows)
+     - Colour-coded cells by shift type
+     - Summary row: total shifts scheduled per staff vs. contracted
+     - Compliance column: flags any law-constraint violations (must show none)
+  3. LLM-generated narrative report explaining:
+     - Any preferences that could not be honoured and why
+     - Any near-misses or trade-offs
+     - Infeasibility warnings if minimum staffing was not achievable on any day
+
+
+=== FILE: law ===
+SWEDISH WORK LAW RULES — MEDICAL ROSTERING SYSTEM
+====================================================
+Source: Arbetsmiljöverket (Swedish Work Environment Authority)
+        Arbetstidslagen (1982:673) — Working Hours Act
+        AFS 2005:6 — Provisions on systematic work environment management
+        AFS 1982:17 — Night work in healthcare
+
+NOTE: Healthcare employers are bound by both statutory law and collective
+agreements (kollektivavtal). Where a collective agreement is more restrictive,
+it takes precedence. The rules below reflect statutory minimums.
+
+Reference: https://www.av.se/arbetstid/
+
+
+SECTION 1 — DAILY WORKING HOURS
+---------------------------------
+Rule 1.1 — Standard daily working time:
+  Maximum 8 hours per day for a normal working day.
+  A working day is counted from the start of one shift to the start of the next.
+
+Rule 1.2 — Minimum daily rest (dygnsvila):
+  At least 11 consecutive hours of rest must be provided between the end of
+  one shift and the start of the next shift.
+  Basis: Arbetstidslagen §13 and EU Working Time Directive 2003/88/EC Article 3.
+
+Rule 1.3 — Mandatory break (rast):
+  For any shift exceeding 5 hours, at least 30 minutes of uninterrupted break
+  must be provided. Break is not counted as working time.
+
+Implication for shift scheduling (08:00-shift model):
+  SHIFT TIMES used in this department:
+    Day     (D): 07:00 – 15:00  (8 h)
+    Evening (E): 15:00 – 23:00  (8 h)
+    Night   (N): 23:00 – 07:00  (8 h, ends following calendar day)
+
+  FORBIDDEN CONSECUTIVE SHIFT TRANSITIONS (violate 11 h rest rule):
+    Evening shift → Day shift next day    (gap = 8 h  < 11 h — FORBIDDEN)
+    Night shift   → Day shift next day    (gap = 0 h         — FORBIDDEN)
+    Night shift   → Evening shift next day (gap = 8 h < 11 h — FORBIDDEN)
+
+  PERMITTED CONSECUTIVE TRANSITIONS:
+    Day     → Evening same day             (gap = 0 h — prevented by 1-shift/day rule)
+    Day     → Any shift next day           (gap ≥ 16 h — OK)
+    Evening → Evening or Night next day    (gap ≥ 16 h — OK)
+    Night   → Night next day               (gap = 16 h — OK)
+
+
+SECTION 2 — WEEKLY WORKING HOURS
+----------------------------------
+Rule 2.1 — Maximum weekly working time:
+  Ordinary working time must not exceed 40 hours per week on average.
+  Can be averaged over a reference period of up to 4 weeks.
+  Basis: Arbetstidslagen §10.
+
+Rule 2.2 — Maximum working time over 4-week period:
+  The 4-week rolling average must not exceed 40 hours/week → 160 hours per 4 weeks.
+  In exceptional cases (overtime), up to 48 hours per week may apply temporarily,
+  but the average over the reference period must not exceed 40 h/week.
+
+Rule 2.3 — Weekly rest (veckovila):
+  Every worker is entitled to at least 36 consecutive hours of rest per 7-day period.
+  This rest period should, where possible, include Sunday.
+  Basis: Arbetstidslagen §14.
+
+Implication for scheduling:
+  With 8-hour shifts, max 5 shifts per week (5 × 8 = 40 h).
+  Any 7-day window must contain at least 2 consecutive days off to ensure 36 h rest.
+  Hard rule: no more than 5 working days in any 7-day rolling window.
+  Hard rule: no more than 5 consecutive working days without a day off.
+
+
+SECTION 3 — OVERTIME
+---------------------
+Rule 3.1 — Overtime limits:
+  Maximum overtime per calendar month:  50 hours
+  Maximum overtime per calendar year:   200 hours
+  Overtime must be agreed and documented.
+  Basis: Arbetstidslagen §8.
+
+Rule 3.2 — Overtime compensation:
+  Overtime must be compensated with extra pay or compensatory leave (kompledighet).
+  This system does not schedule overtime unless explicitly allowed.
+
+
+SECTION 4 — NIGHT WORK (NATTARBETE)
+-------------------------------------
+Rule 4.1 — Definition of night time:
+  Night time (nattetid) is defined as the period between 22:00 and 06:00.
+  Basis: Arbetstidslagen §13a.
+
+  In this department: the Night shift (23:00–07:00) falls within night time.
+  The Evening shift (15:00–23:00) overlaps night time by 1 hour.
+
+Rule 4.2 — Night worker classification:
+  A worker is a "night worker" (nattarbetare) if they regularly work at least
+  3 hours of their normal working time during the night period, or if at least
+  one-third of their annual working time falls during night time.
+
+Rule 4.3 — Maximum for night workers:
+  Night workers must not work more than an average of 8 hours per 24-hour period,
+  calculated over a reference period of 4 months.
+  Basis: Arbetstidslagen §13b.
+
+Rule 4.4 — Health assessments for night workers:
+  Night workers are entitled to a health assessment before assignment and
+  periodically thereafter. The employer must offer this assessment.
+
+Implication for scheduling:
+  Night shifts in this system are 8 hours. With max 1 shift per day, the 8 h/24 h
+  limit is automatically satisfied per shift. Monitor total night shift proportion
+  over 4-week blocks to ensure the 1/3 annual threshold is not inadvertently exceeded.
+  Recommended: no more than 8 night shifts per 4-week block per worker.
+
+
+SECTION 5 — HEALTHCARE-SPECIFIC CONSIDERATIONS
+------------------------------------------------
+Rule 5.1 — Continuous operations (kontinuerlig verksamhet):
+  Healthcare facilities classified as continuous operations may deviate from
+  certain weekly rest rules through collective agreements. However, workers
+  must always receive the 11-hour daily rest (Section 1 Rule 1.2).
+
+Rule 5.2 — On-call (beredskap):
+  On-call time where the employee is available but not required to be present
+  is not counted as working time under Arbetstidslagen §6a.
+  Active on-call (standby at the workplace) is counted as working time.
+
+Rule 5.3 — Psychosocial work environment:
+  AFS 2015:4 (Organisational and Social Work Environment) requires that
+  work schedules do not create unhealthy stress or social isolation.
+  Rostering should avoid excessive consecutive night shifts and provide
+  predictable schedules with reasonable notice (minimum 2 weeks).
+
+Rule 5.4 — Individual consideration:
+  Employees with documented medical conditions, pregnancy, or caregiving
+  obligations may have additional rights to adjusted scheduling.
+  These must be handled as mandatory (hard) constraints.
+
+
+SECTION 6 — SYSTEM CONSTRAINT SUMMARY (for solver configuration)
+-----------------------------------------------------------------
+The following hard constraints are derived from the above rules:
+
+HC-01  At most 1 shift per employee per calendar day.
+HC-02  Forbidden transition: Evening(d) → Day(d+1)   [11 h rest]
+HC-03  Forbidden transition: Night(d) → Day(d+1)     [11 h rest]
+HC-04  Forbidden transition: Night(d) → Evening(d+1) [11 h rest]
+HC-05  At most 5 shifts per employee per 7-day week.
+HC-06  At most 5 working days in any rolling 6-day window (no 6 consecutive days).
+HC-07  Maximum 8 night shifts per employee per 4-week block.
+HC-08  Contract hours: weekly shifts capped at ceiling(contract_pct × 5).
+
+Soft constraints (solver will maximize compliance, not guarantee):
+
+SC-01  Preferred shift types per employee.
+SC-02  Preferred days off per employee.
+SC-03  Avoid specified shift types per employee.
+SC-04  Maximum night shifts per week per employee.
+SC-05  Minimize consecutive shifts of the same unfavored type.
+

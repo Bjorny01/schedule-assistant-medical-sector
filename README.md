@@ -40,7 +40,6 @@ schedule-assistant-medical-sector/
 │   ├── klara.txt                  # Nurse,   75 %
 │   ├── nora.txt                   # Doctor, 100 %  (clinical lead, day shifts only)
 │   ├── desdemona.txt              # Doctor, 100 %  (no Fridays — research day)
-│   ├── karin.txt                  # Doctor, 100 %  (2-week vacation in planning window)
 │   └── melvin.txt                 # Doctor, 100 %  (ST-läkare / specialist trainee)
 │
 ├── src/                           # Python source package

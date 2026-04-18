@@ -1,0 +1,54 @@
+===================================================================
+STAFF CONFIGURATION FILE — Med-3 Rostering System
+===================================================================
+
+PERSONAL INFORMATION
+--------------------
+Name:           Desdemona Kraft
+Role:           Doctor (Läkare) — Specialist in Internal Medicine
+Employee ID:    LKR-002
+Contract:       Full-time (100%)
+Max shifts per week: 5
+
+SHIFT AVAILABILITY
+------------------
+Allowed shifts: Day, Evening
+HARD CONSTRAINT: Desdemona is not available for night shifts. She has an
+academic appointment at Karolinska Institutet and uses early mornings for
+research; night work would prevent this. This is a standing agreement with
+the department head.
+
+MANDATORY DAYS OFF (hard constraint — must not be scheduled)
+-------------------------------------------------------------
+Every Friday    — RECURRING HARD CONSTRAINT. Desdemona dedicates Fridays to
+                  her research role at the university. This is a formal
+                  50/50 clinical/academic split in her employment contract.
+                  She is never available on Fridays — see recurring section.
+
+2026-04-13    Easter week (academic institution closed — travel planned).
+2026-04-24    Doctoral thesis defence she is supervising (all-day obligation).
+2026-05-21    International cardiology symposium (presenting — all-day).
+2026-05-22    Symposium day 2 (Stockholm — overnight stay, all-day).
+
+RECURRING UNAVAILABILITY (hard constraint)
+------------------------------------------
+Friday     — Research day at university. NEVER schedule on Fridays.
+             This is written into her employment contract.
+
+SHIFT PREFERENCES (soft constraint — schedule will try to honour)
+-----------------------------------------------------------------
+Preferred shifts:          Day
+Avoid shifts:              Night (hard constraint already enforced)
+Preferred days off:        Monday (uses Monday mornings for paper writing)
+Max night shifts per week: 0 (hard medical/contractual restriction)
+Max consecutive working days: 4
+
+ADDITIONAL NOTES
+----------------
+Desdemona is a specialist physician with a combined clinical and academic role.
+Her Fridays are non-negotiable research days at the university (Karolinska).
+She works the remaining 4 weekdays (Mon–Thu) plus occasional weekends,
+amounting to a full clinical FTE when combined with her academic day.
+She is a highly skilled clinician and preferred for complex patient cases.
+She prefers day shifts for the same reason she avoids nights — research
+requires alertness in the early morning hours.

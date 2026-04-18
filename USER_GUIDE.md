@@ -19,10 +19,11 @@ schedule-assistant-medical-sector/
 ├── main.py                        # Entry point — run this to generate a schedule
 ├── requirements.txt               # Python dependencies
 │
-├── staff_configs/                 # One .txt file per staff member
-│   ├── anna.txt
-│   ├── bob.txt
-│   └── ...
+├── staff_configs/                 # One .txt file per staff member (11 real configs)
+│   ├── maja.txt                   # Nurse  100%
+│   ├── anna.txt                   # Nurse  100%
+│   ├── nora.txt                   # Doctor 100%
+│   └── ...                        # clas, desdemona, gudrun, kalle, klara, melvin, pelle, sofia
 ├── department_requirements.txt    # Staffing minimums per shift and day type
 ├── swedish_work_law.txt           # Work-law rules loaded by the solver
 │
@@ -358,8 +359,8 @@ Pure data classes — no I/O, no external dependencies.
 | `ShiftType` | Enum: `DAY`, `EVENING`, `NIGHT` |
 | `Role` | Enum: `NURSE`, `DOCTOR` |
 | `Staff` | One staff member with contract and constraints |
-| `StaffConstraints` | Hard/soft rules for one person (days off, allowed shifts, …) |
-| `StaffPreferences` | Soft preferences (preferred shifts, avoid shifts, …) |
+| `StaffConstraints` | Hard/soft rules for one person (days off, shifts off, allowed shifts, …) |
+| `StaffPreferences` | Soft preferences (preferred/avoid shifts, preferred days off, preferred shifts off, …) |
 | `DepartmentRequirements` | Minimum staffing per shift type and day type |
 | `WorkLawRules` | Swedish work-law numeric limits |
 | `ShiftAssignment` | A single (staff, date, shift) assignment |

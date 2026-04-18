@@ -1,0 +1,48 @@
+===================================================================
+STAFF CONFIGURATION FILE — Med-3 Rostering System
+===================================================================
+
+PERSONAL INFORMATION
+--------------------
+Name:           Klara Svensson
+Role:           Nurse (Sjuksköterska)
+Employee ID:    SSK-008
+Contract:       75%
+Max shifts per week: 4
+
+SHIFT AVAILABILITY
+------------------
+Allowed shifts: Day, Evening, Night
+(All shifts allowed — see preferences below)
+
+MANDATORY DAYS OFF (hard constraint — must not be scheduled)
+-------------------------------------------------------------
+2026-04-27    Religious observance (Valborg/Walpurgis Night — personal
+              conviction, approved standing exception).
+2026-04-28    Recovery/observance day (same occasion).
+2026-05-19    Partner's graduation — pre-approved leave.
+
+RECURRING UNAVAILABILITY (hard constraint)
+------------------------------------------
+None.
+
+SHIFT PREFERENCES (soft constraint — schedule will try to honour)
+-----------------------------------------------------------------
+Preferred shifts:   Night, Evening
+Avoid shifts:       None (no specific aversions)
+Preferred days off: Monday, Tuesday (prefers rest early in the week
+                    after weekend night shifts)
+Max night shifts per week:   3
+Max consecutive working days: 4
+
+ADDITIONAL NOTES
+----------------
+Klara is a 75% nurse who actively prefers night and evening shifts.
+She is studying part-time for a master's degree in nursing science and
+finds that night shifts give her daytime hours for academic work.
+She is a reliable and self-sufficient night worker, comfortable working
+with minimal supervision. She is new to Med-3 (joined 6 months ago)
+but has 4 years of prior ward experience.
+At 75%, she works approximately 3-4 shifts per week.
+She would ideally like her days off clustered at the start of the week
+after a run of night shifts, to allow proper circadian recovery.

@@ -1,0 +1,47 @@
+===================================================================
+STAFF CONFIGURATION FILE — Med-3 Rostering System
+===================================================================
+
+PERSONAL INFORMATION
+--------------------
+Name:           Sofia Ekström
+Role:           Nurse (Sjuksköterska)
+Employee ID:    SSK-006
+Contract:       80%
+Max shifts per week: 4
+
+SHIFT AVAILABILITY
+------------------
+Allowed shifts: Day, Evening
+HARD CONSTRAINT: Sofia has a documented sleep disorder (hypersomnia) that
+makes night shifts medically inadvisable. Her occupational health physician
+(företagshälsovård) has issued a written recommendation against night work.
+She must not be scheduled for night shifts.
+
+MANDATORY DAYS OFF (hard constraint — must not be scheduled)
+-------------------------------------------------------------
+2026-04-21    Planned surgery (outpatient, recovery same day — needs day off)
+2026-04-22    Recovery day following procedure.
+2026-04-23    Recovery day (precautionary — may return 2026-04-24 if well)
+2026-05-05    Half-marathon race — pre-registered, non-refundable.
+
+RECURRING UNAVAILABILITY (hard constraint)
+------------------------------------------
+None fixed, beyond no night shifts (see shift availability above).
+
+SHIFT PREFERENCES (soft constraint — schedule will try to honour)
+-----------------------------------------------------------------
+Preferred shifts:   Day
+Avoid shifts:       Night (hard medical restriction — already enforced above)
+Preferred days off: Saturday (partner works weekends — prefers to align)
+Max night shifts per week:   0 (medical restriction)
+Max consecutive working days: 4
+
+ADDITIONAL NOTES
+----------------
+Sofia is an 80% nurse who is medically restricted from night work. This is
+a formal occupational health determination, not just a preference.
+She is scheduled for a minor outpatient procedure on 2026-04-21 and needs
+the surrounding days off for recovery — approximately 3 days.
+She is otherwise highly motivated and prefers day shifts.
+At 80%, she expects around 4 shifts per week.

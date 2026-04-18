@@ -1,0 +1,49 @@
+===================================================================
+STAFF CONFIGURATION FILE — Med-3 Rostering System
+===================================================================
+
+PERSONAL INFORMATION
+--------------------
+Name:           Gudrun Hansson
+Role:           Nurse (Sjuksköterska)
+Employee ID:    SSK-004
+Contract:       60%
+Max shifts per week: 3
+
+SHIFT AVAILABILITY
+------------------
+Allowed shifts: Day only
+HARD CONSTRAINT: Gudrun cannot work evening or night shifts. This is
+documented in a formal agreement with the ward manager due to sole
+caregiving responsibilities for two children (no evening childcare
+available). This restriction is permanent and non-negotiable.
+
+MANDATORY DAYS OFF (hard constraint — must not be scheduled)
+-------------------------------------------------------------
+2026-04-14    Parent-teacher conference at children's school (all-day)
+2026-05-27    Child's medical appointment — cannot be rescheduled.
+2026-05-28    Follow-up appointment (same child, next day).
+
+RECURRING UNAVAILABILITY (hard constraint)
+------------------------------------------
+Wednesday   — Gudrun's contractual part-time day off. She works
+              Monday, Tuesday, Thursday, Friday at most (and some weekends).
+              Wednesdays are always off — this is in her employment contract.
+
+SHIFT PREFERENCES (soft constraint — schedule will try to honour)
+-----------------------------------------------------------------
+Preferred shifts:   Day (only allowed shift)
+Avoid shifts:       Evening, Night (hard constraint already — never schedule)
+Preferred days off: Saturday, Sunday (wants to maximise family time on weekends,
+                    but understands occasional weekend shifts are necessary)
+Max night shifts per week:   0 (not applicable — nights not allowed)
+Max consecutive working days: 3
+
+ADDITIONAL NOTES
+----------------
+Gudrun is a highly experienced nurse who returned from parental leave 18 months
+ago on a reduced schedule. She is extremely reliable during her available hours.
+Her 60% contract means approximately 3 day shifts per week.
+She is available Mon, Tue, Thu, Fri, and sometimes Sat or Sun.
+Wednesdays and all evenings/nights are strictly off-limits.
+The scheduler must never schedule Gudrun on evenings or nights.

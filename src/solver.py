@@ -160,19 +160,33 @@ def build_schedule(
     for si, staff in enumerate(staff_list):
         c = staff.constraints
 
-        # Mandatory specific dates off
+        # Mandatory specific dates off (whole day)
         for off_date in c.mandatory_days_off:
             d_idx = (off_date - start_date).days
             if 0 <= d_idx < num_days:
                 for s in range(NUM_SHIFTS):
                     model.Add(shifts[(si, d_idx, s)] == 0)
 
-        # Recurring weekday off
+        # Mandatory specific shifts off (single shift on a specific date)
+        for off_date, shift_type in c.mandatory_shifts_off:
+            d_idx = (off_date - start_date).days
+            if 0 <= d_idx < num_days:
+                s_idx = SHIFT_TYPES.index(shift_type)
+                model.Add(shifts[(si, d_idx, s_idx)] == 0)
+
+        # Recurring weekday off (whole day)
         for weekday in c.recurring_days_off:
             for d in range(num_days):
                 if (start_date + timedelta(days=d)).weekday() == weekday:
                     for s in range(NUM_SHIFTS):
                         model.Add(shifts[(si, d, s)] == 0)
+
+        # Recurring shift off (specific shift on a specific weekday)
+        for weekday, shift_type in c.recurring_shifts_off:
+            s_idx = SHIFT_TYPES.index(shift_type)
+            for d in range(num_days):
+                if (start_date + timedelta(days=d)).weekday() == weekday:
+                    model.Add(shifts[(si, d, s_idx)] == 0)
 
         # Allowed shift types (hard medical / contractual restriction)
         if c.allowed_shifts is not None:
@@ -217,6 +231,10 @@ def build_schedule(
 
                 # Penalty: scheduling on a preferred-off weekday
                 if dow in prefs.preferred_days_off:
+                    obj_terms.append(W_PREF_DAY_OFF * var)
+
+                # Penalty: scheduling on a preferred-off (weekday, shift) pair
+                if (dow, shift_type) in prefs.preferred_shifts_off:
                     obj_terms.append(W_PREF_DAY_OFF * var)
 
                 # Bonus: filling contract hours (drives scheduler to use available slots)
@@ -306,6 +324,12 @@ def build_schedule(
                         broken_prefs.append(
                             f"{staff.name}: scheduled on {curr_date.strftime('%A')} "
                             f"{curr_date} (preference: day off)"
+                        )
+                    if (dow, shift_type) in prefs.preferred_shifts_off:
+                        broken_prefs.append(
+                            f"{staff.name}: scheduled {shift_type.value} on "
+                            f"{curr_date.strftime('%A')} {curr_date} "
+                            f"(preference: {shift_type.value} off on that weekday)"
                         )
 
     return Schedule(

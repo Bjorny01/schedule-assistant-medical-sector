@@ -14,6 +14,7 @@ from src.models import (
     ShiftType,
     Staff,
     StaffConstraints,
+    StaffPreferences,
 )
 
 
@@ -158,3 +159,38 @@ def test_total_shifts_for_bob(sample_schedule):
 
 def test_total_shifts_for_unknown(sample_schedule):
     assert sample_schedule.total_shifts_for("Unknown") == 0
+
+
+# ---------------------------------------------------------------------------
+# Shift-level off fields — defaults and assignment
+# ---------------------------------------------------------------------------
+
+def test_staff_constraints_default_mandatory_shifts_off_empty():
+    assert StaffConstraints().mandatory_shifts_off == []
+
+
+def test_staff_constraints_default_recurring_shifts_off_empty():
+    assert StaffConstraints().recurring_shifts_off == []
+
+
+def test_staff_preferences_default_preferred_shifts_off_empty():
+    assert StaffPreferences().preferred_shifts_off == []
+
+
+def test_staff_constraints_stores_mandatory_shifts_off():
+    c = StaffConstraints(
+        mandatory_shifts_off=[(date(2024, 3, 15), ShiftType.NIGHT)]
+    )
+    assert (date(2024, 3, 15), ShiftType.NIGHT) in c.mandatory_shifts_off
+
+
+def test_staff_constraints_stores_recurring_shifts_off():
+    c = StaffConstraints(
+        recurring_shifts_off=[(4, ShiftType.EVENING)]  # Friday evening
+    )
+    assert (4, ShiftType.EVENING) in c.recurring_shifts_off
+
+
+def test_staff_preferences_stores_preferred_shifts_off():
+    p = StaffPreferences(preferred_shifts_off=[(5, ShiftType.DAY)])
+    assert (5, ShiftType.DAY) in p.preferred_shifts_off

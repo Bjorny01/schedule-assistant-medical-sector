@@ -9,8 +9,8 @@ venv/
 # Claude
 .claude/
 
-# Ginore all .xlsx files
-*.xlsx
+# Ignore .xlsx files in root folder
+/*.xlsx
 
 # Output folders from manually generated LLM parser files
 output/
