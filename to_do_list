@@ -1,0 +1,11 @@
+Future feature ideas:
+- Make it able (but not required) to import an old schedule to keep schedules fair e.g. someone doesn't get down-prioritize two schedules in a row
+- Make it able to take instructions on small edits, e.g. change nurse X to nurse Y on YYYY-MM-DD day shift
+
+Testing
+- Push time horizon 4, 6, 8 weeks
+- Test fall-back breaking, e.g. too many mandatory days off some day
+
+Own learning:
+- Repeat optimizer mathematical model and priorities 
+
