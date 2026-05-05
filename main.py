@@ -3,13 +3,19 @@
 Medical Staff Rostering System — Main Entry Point
 ==================================================
 
+Default mode is **manual-LLM**: prompts are written to files in the output
+directory and the program waits for you to paste responses back. This lets
+you use any LLM (ChatGPT, Gemini, local model, etc.) and is the same path
+the notebook uses.
+
 Usage:
-    python main.py
+    python main.py                         # manual-LLM (default)
     python main.py --start-date 2026-04-06
     python main.py --start-date 2026-04-06 --output-dir my_output
-    python main.py --no-llm        # skip Claude API calls (direct text parsing + no report)
+    python main.py --api                   # call the Anthropic API directly
+    python main.py --no-llm                # text-parser fallback, no report
 
-Environment variable required for LLM features:
+Environment variable required only for --api:
     ANTHROPIC_API_KEY=<your key>
 """
 from __future__ import annotations
@@ -19,7 +25,7 @@ import sys
 from datetime import date, timedelta
 from pathlib import Path
 
-NUM_WEEKS = 8
+NUM_WEEKS = 4
 
 BASE_DIR = Path(__file__).parent
 STAFF_DIR = BASE_DIR / "staff_configs"
@@ -51,16 +57,16 @@ def main() -> int:
         metavar="DIR",
         help="Directory where .ics and .xlsx files are written (default: ./output).",
     )
-    parser.add_argument(
+    mode_group = parser.add_mutually_exclusive_group()
+    mode_group.add_argument(
+        "--api",
+        action="store_true",
+        help="Call the Anthropic API directly (requires ANTHROPIC_API_KEY).",
+    )
+    mode_group.add_argument(
         "--no-llm",
         action="store_true",
-        help="Disable Claude API calls. Uses built-in text parser and skips the narrative report.",
-    )
-    parser.add_argument(
-        "--manual-llm",
-        action="store_true",
-        help="Write LLM prompts to files for copy-pasting into any LLM. "
-             "Waits for you to save the response before continuing.",
+        help="Disable LLM entirely. Uses built-in text parser and skips the narrative report.",
     )
     parser.add_argument(
         "--time-limit",
@@ -99,11 +105,13 @@ def main() -> int:
     from src.config_parser import parse_all_inputs
 
     print("[1/4] Parsing configuration files...")
-    manual_llm = args.manual_llm
-    use_llm = not args.no_llm and not manual_llm
+    use_llm = args.api
+    manual_llm = not args.api and not args.no_llm
     if use_llm and not __import__("os").environ.get("ANTHROPIC_API_KEY"):
-        print("      WARNING: ANTHROPIC_API_KEY not set — falling back to text parser.")
-        use_llm = False
+        print("      ERROR: --api requires ANTHROPIC_API_KEY to be set.")
+        return 1
+    mode_label = "manual-LLM" if manual_llm else ("Anthropic API" if use_llm else "text parser")
+    print(f"      Mode: {mode_label}")
 
     output_dir = Path(args.output_dir)
 
